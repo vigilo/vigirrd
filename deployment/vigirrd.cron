@@ -1,0 +1,2 @@
+# Remove old cached graphs
+*/15 *	* * *	root	[ -d /tmp/vigirrd/img ] && find /tmp/vigirrd/img -type f -name "*.png" -mmin +15 -print0 | xargs -r -0 rm

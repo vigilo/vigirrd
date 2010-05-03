@@ -1,0 +1,4 @@
+recursive-include vigirrd/public *
+include vigirrd/public/favicon.ico
+recursive-include vigirrd/i18n *
+recursive-include vigirrd/templates *

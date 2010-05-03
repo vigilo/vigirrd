@@ -1,0 +1,88 @@
+# Init hashmap (mandatory)
+hostscfg = {}
+
+
+# Define a host
+hostscfg["localhost"] = { 
+	"step": 300, 
+	"grid": "HOUR:1:DAY:1:HOUR:2:0:%Hh", 
+	"width": 450, 
+	"height": 150,
+}
+# Define graphs
+hostscfg["localhost"]["graphes"] = {
+	'Web': { 				# Graph name
+		'factors': {}, 			# Apply factors if necessary
+		'vlabel': 's', 			# Vertical axis label
+		'template': 'lines', 		# Selected template in templates.py
+		'ds': ['HTTP'] 			# List of DataSources used in this graph
+	}, 
+	'Load': {
+		'factors': {}, 
+		#'factors': {'Load 01': 0.01, 'Load 05': 0.01, 'Load 15': 0.01}, # Load is given by SNMP with a 100 factor, revert it.
+		'vlabel': 'load', 
+		'template': 'lines', 
+		'ds': ['Load 01', 'Load 05', 'Load 15']
+	},
+	'Users': {
+		'factors': {}, 
+		'vlabel': 'users', 
+		'template': 'lines', 
+		'ds': ['Users']
+	}, 
+	'Root partition': {
+		'factors': {}, 
+		'vlabel': 'bytes', 
+		'template': 'lines', 
+		'ds': ['Root partition']
+	}, 
+	'sysUpTime': {
+		'factors': {'sysUpTime': 1.0/86400}, # seconds -> days (1.0 and not 1 because we need it to be a foat, not an int)
+		'vlabel': 'days', 
+		'template': 'lines', 
+		'ds': ['sysUpTime']
+	}, 
+	'Network interface traffic': {
+		'factors': {'ifOutOctets': 8, 'ifInOctets': 8}, # bytes -> bits
+		'vlabel': 'bps', 
+		'template': 'area-line',  # This is an MRTG-like template (green area, blue line)
+		'ds': ['ifInOctets', 'ifOutOctets']
+	}, 
+	'Network interface errors': {
+		'factors': {}, 
+		'vlabel': 'packets/s', 
+		'template': 'lines', 
+		'ds': ['ifInErrors', 'ifOutErrors', 'ifInDiscards', 'ifOutDiscards']
+	}, 
+}
+
+
+# Define another host
+hostscfg["host2"] = { 
+	"step": 300, 
+	"grid": "HOUR:1:DAY:1:HOUR:2:0:%Hh", 
+	"width": 450, 
+	"height": 150,
+}
+# Define graphs
+hostscfg["host2"]["graphes"] = { 
+	'Network interface traffic': {
+		'factors': {'ifOutOctets': 8, 'ifInOctets': 8}, # bytes -> bits
+		'vlabel': 'bps', 
+		'template': 'area-line',  # This is an MRTG-like template (green area, blue line)
+		'ds': ['ifInOctets', 'ifOutOctets']
+	}, 
+	'Network interface errors': {
+		'factors': {}, 
+		'vlabel': 'packets/s', 
+		'template': 'lines', 
+		'ds': ['ifInErrors', 'ifOutErrors', 'ifInDiscards', 'ifOutDiscards']
+	}, 
+	'Load': {
+		'factors': {'Load 01': 0.01, 'Load 05': 0.01, 'Load 15': 0.01}, # Load is given by SNMP with a 100 factor, revert it.
+		'vlabel': 'load', 
+		'template': 'lines', 
+		'ds': ['Load 01', 'Load 05', 'Load 15']
+	}
+}
+
