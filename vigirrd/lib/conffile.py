@@ -80,20 +80,22 @@ class Settings(UserDict.DictMixin, object):
         self.__dct.update(settings_raw)
 
 def reload():
+    global hosts, templates, labels
     settings.empty()
     files = glob.glob(os.path.join(
                     config.get("conf_dir", "/etc/vigilo/vigirrd"), "*.py"))
     files.sort()
     for f in files:
+        LOGGER.debug("Trying to read file %s" % f)
         try:
             settings.load_file(f)
         except Exception, e:
             LOGGER.error("Error while parsing %s: %s\n" % (f, str(e)))
     del files
+    hosts = settings.get("hostscfg", {})
+    templates = settings.get("templates", {})
+    labels = settings.get("labels", {})
 
 settings = Settings()
 reload()
-hosts = settings.get("hostscfg", {})
-templates = settings.get("templates", {})
-labels = settings.get("labels", {})
 

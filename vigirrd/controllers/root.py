@@ -11,7 +11,7 @@ LOGGER = getLogger(__name__)
 import pylons
 from tg import expose, flash, require, url, request, redirect, config, response
 from pylons.i18n import ugettext as _, lazy_ugettext as l_
-from tg.exceptions import HTTPError, HTTPNotFound
+from tg.exceptions import HTTPServiceUnavailable, HTTPNotFound
 from tg.controllers import CUSTOM_CONTENT_TYPE
 
 from vigirrd.lib.base import BaseController
@@ -46,7 +46,8 @@ class RootController(BaseController):
         """Point d'entrée principal"""
         conffile.reload()
         if not conffile.hosts:
-            raise HTTPError("No configuration yet")
+            LOGGER.error("No configuration yet")
+            raise HTTPServiceUnavailable("No configuration yet")
         if "host" not in kwargs:
             redirect(url('/servers'))
             return
@@ -119,7 +120,7 @@ class RootController(BaseController):
             rrd.showMergedRRDs(kwargs["host"], kwargs["graphtemplate"],
                                image_file, start, duration, details=details)
         except rrd.RRDNoDSError, e:
-            raise HTTPError(str(e))
+            raise HTTPServiceUnavailable(str(e))
         except rrd.RRDNotFoundError, e:
             #raise HTTPNotFound("No RRD: %s" % str(e))
             redirect(url('/error'), code=404, message="<p>No RRD: %s</p>" % str(e))
