@@ -16,7 +16,7 @@ from tg.controllers import CUSTOM_CONTENT_TYPE
 
 from vigirrd.lib.base import BaseController
 #from vigirrd.model import DBSession, metadata
-from vigirrd.controllers.error import ErrorController
+from vigilo.turbogears.controllers.error import ErrorController
 
 from vigirrd.lib import conffile
 from vigirrd.lib import rrd
