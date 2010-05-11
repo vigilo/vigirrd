@@ -23,6 +23,11 @@ from vigirrd import model
 from vigirrd.lib import app_globals, helpers 
 
 class VigiRRDConfig(VigiloAppConfig):
+    def __init__(self, *args, **kwargs):
+        super(VigiRRDConfig, self).__init__(*args, **kwargs)
+        # Désactivation de l'accès à la BDD (inutilisée par VigiRRD).
+        self.use_sqlalchemy = False
+
     def setup_paths(self):
         """
         Surcharge pour ne pas utiliser le système de thèmes de Vigilo.
@@ -33,20 +38,14 @@ class VigiRRDConfig(VigiloAppConfig):
 
 
 base_config = VigiRRDConfig('vigirrd')
-base_config.renderers = []
-
 base_config.package = vigirrd
 
-#Set the default renderer
-base_config.default_renderer = 'genshi'
-base_config.renderers.append('genshi')
-
-#Configure the base SQLALchemy Setup
-base_config.use_sqlalchemy = False
 # Utilisation de fichier à plat dans VigiRRD
 #base_config.model = vigirrd.model
 #base_config.DBSession = vigirrd.model.DBSession
 
-base_config.mimetype_lookup = {'.png':'image/png'}
-base_config.mimetype_lookup = {'.csv':'text/csv'}
+base_config.mimetype_lookup = {
+    '.png':'image/png',
+    '.csv': 'text/csv',
+}
 
