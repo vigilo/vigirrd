@@ -74,7 +74,7 @@ class RootController(BaseController):
             return
 
     @expose("json")
-    def starttime(self, host):
+    def starttime(self, host, nocache=None):
         try:
             value = rrd.getStartTime(str(host))
         except rrd.RRDError:
@@ -144,7 +144,7 @@ class RootController(BaseController):
                    }
 
     @expose("json")
-    def lastvalue(self, host, ds):
+    def lastvalue(self, host, ds, nocache=None):
         conffile.reload()
         server = conffile.hosts[host]
         if not server:
@@ -165,7 +165,7 @@ class RootController(BaseController):
                 }
 
     @expose(content_type=CUSTOM_CONTENT_TYPE)
-    def export(self, host, graphtemplate, ds=None, start=None, end=None):
+    def export(self, host, graphtemplate, ds=None, start=None, end=None, nocache=None):
         '''
         export CSV
 
