@@ -71,7 +71,7 @@ rm -rf $RPM_BUILD_ROOT
 
 %files -f %{name}.lang
 %defattr(-,root,root)
-%doc COPYING README README.fr doc/*
+%doc COPYING 
 %dir %{_sysconfdir}/vigilo
 %dir %{_sysconfdir}/vigilo/%{module}
 %config(noreplace) %{_sysconfdir}/vigilo/%{module}/*.conf
