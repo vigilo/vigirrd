@@ -49,11 +49,11 @@ class RootController(BaseController):
             LOGGER.error("No configuration yet")
             raise HTTPServiceUnavailable("No configuration yet")
         if "host" not in kwargs:
-            redirect(url('/servers'))
+            redirect('/servers')
             return
         host = kwargs["host"]
         if "graphtemplate" not in kwargs:
-            redirect(url('/graphs'))
+            redirect('/graphs?host=%s' % host)
             return
         if "start" in kwargs:
             start = int(kwargs["start"])
@@ -62,15 +62,14 @@ class RootController(BaseController):
         details = "1"
         if "details" in kwargs and not (kwargs["details"]):
             details = ""
-        if "duration" not in kwargs:
-            duration = 86400
+        duration = int(kwargs.get('duration', 86400))
         qs = "host=%s&graphtemplate=%s&start=%d&duration=%s&details=%s" \
                 % (kwargs["host"], kwargs["graphtemplate"], start, duration, details)
         if "direct" in kwargs and kwargs["direct"]:
-            redirect(url('/graph.png?%s' % qs))
+            redirect('/graph.png?%s' % qs)
             return
         else:
-            redirect(url('/graph.html?%s' % qs))
+            redirect('/graph.html?%s' % qs)
             return
 
     @expose("json")
