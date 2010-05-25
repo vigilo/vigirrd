@@ -138,7 +138,7 @@ class RootController(BaseController):
             imgurl = os.path.join(config.get("image_cache_url", "/"),
                                    os.path.basename(image_file))
             return {"host": kwargs["host"],
-                    "imgurl": imgurl,
+                    "imgurl": url(imgurl),
                     "template": kwargs["graphtemplate"],
                    }
 
