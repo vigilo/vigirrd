@@ -13,5 +13,6 @@
     <p>Graphing host ${host}:</p>
     <p><img src="${imgurl}" alt="server ${host} with template ${template}" /></p>
     <p><a href="${tg.url('/')}">Back to servers list</a></p>
+    <p><a href="${tg.url('/graphs.html?host=%s' % host)}">Back to graphs list</a></p>
 </body>
 </html>

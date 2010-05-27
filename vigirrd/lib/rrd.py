@@ -610,16 +610,16 @@ class RRD(object):
             a.append("--no-legend")
 #            a.append("--only-graph")
             a.append("--width")
-            a.append(str(250))
+            a.append(250)
             a.append("--height")
-            a.append(str(64))
+            a.append(64)
         else:
             a.append("--width")
-            a.append(str(self.cfg["width"]))
+            a.append(self.cfg["width"])
             a.append("--height")
-            a.append(str(self.cfg["height"]))
+            a.append(self.cfg["height"])
             a.append("--title")
-            a.append(str("%s: %s" % (self.server, template["name"])))
+            a.append("%s: %s" % (self.server, template["name"]))
             a.append("--vertical-label")
             a.append(template["vlabel"])
         if lazy:
@@ -673,8 +673,8 @@ class RRD(object):
                 dsname = d
             if not os.path.exists(rrdfile):
                 raise RRDNotFoundError(rrdfile)
-            a.append(str("DEF:%s_orig=%s:%s:AVERAGE"%(i, rrdfile, dsname)))
-            a.append("CDEF:%s=%s_orig,%1.10f,*"%(i, i, factor))
+            a.append("DEF:%s_orig=%s:%s:AVERAGE" % (i, rrdfile, dsname))
+            a.append("CDEF:%s=%s_orig,%1.10f,*" % (i, i, factor))
 
             graphline = "%s:%s%s:%s" % (params["type"], i, params["color"], \
             label.ljust(18))
@@ -688,6 +688,8 @@ class RRD(object):
             if len(ds_list) > 1:
                 a.append('COMMENT:\\n')
 
+        # rrdtool.graph() ne sait manipuler que le type <str>.
+        a = [str(e) for e in a]
         LOGGER.debug("rrdtool graph '%s'" % "' '".join(a))
         rrdtool.graph(*a)
 
