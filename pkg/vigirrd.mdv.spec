@@ -19,7 +19,10 @@ Requires:   python >= 2.5
 Requires:   python-setuptools
 Requires:   vigilo-turbogears
 Requires:   python-rrdtool
+Requires:   python-simplejson
 Requires:   fonts-ttf-dejavu
+Requires:   apache-mod_wsgi
+
 # For the api doc generation
 #BuildRequires: epydoc python-rrdtool
 
