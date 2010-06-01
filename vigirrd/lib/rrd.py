@@ -308,7 +308,7 @@ def getExportFileName(host, ds_graph, start, end):
     """
 
     # plage temps sous forme texte
-    format = '%Y%m%d-%H%M%S'
+    format = '%Y/%m/%d-%H:%M:%S'
 
     dt = datetime.datetime.utcfromtimestamp(int(start))
     str_start = dt.strftime(format)
@@ -316,13 +316,12 @@ def getExportFileName(host, ds_graph, start, end):
     dt = datetime.datetime.utcfromtimestamp(int(end))
     str_end = dt.strftime(format)
 
-    # nom fichier
-    filename = '%s_%s_%s_%s' % (host, ds_graph, str_start, str_end)
+    host = host.encode('utf-8', 'replace')
+    ds_graph = ds_graph.encode('utf-8', 'replace')
 
-    # remplacement caracteres particuliers
-    lc = [' ', '|', '/', '\\', ':', '?', '*', '<', '>', '"']
-    for c in lc:
-        filename = filename.replace(c, "_")
+    # nom fichier
+    filename = '%s - %s (%s - %s)' % (host, ds_graph, str_start, str_end)
+    filename = filename.encode('backslash')
 
     # extension
     filename += ".csv"

@@ -206,6 +206,7 @@ class RootController(BaseController):
         else:
             filename = rrd.getExportFileName(host, graphtemplate, start, end)
         response.headers['Content-Type'] = 'text/csv'
-        response.headers['Content-Disposition'] = 'attachment;filename=%s' % filename
+        response.headers['Content-Disposition'] = \
+                        'attachment;filename="%s"' % filename
         return rrd.exportCSV(host, graphtemplate, ds, start, end)
 
