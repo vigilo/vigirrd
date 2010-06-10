@@ -85,16 +85,12 @@ rm -rf $RPM_BUILD_ROOT
 %{_sysconfdir}/vigilo/%{module}/graphs.py.dist
 %config(noreplace) %{_sysconfdir}/httpd/conf/webapps.d/*
 %config(noreplace) %{_sysconfdir}/cron.d/*
+%config(noreplace) %{_sysconfdir}/logrotate.d/%{module}
+%dir %{_localstatedir}/log/vigilo/
+%attr(750,apache,apache) %{_localstatedir}/log/vigilo/%{module}
 %{python_sitelib}/*
 
 %files vigiconf
 %defattr(-,root,root)
 %{_sysconfdir}/vigilo/%{module}/graphs.conf.py
 
-
-%changelog
-* Fri Jul 31 2009 Aurelien Bompard <aurelien.bompard@c-s.fr>
-- rename confmgr to vigiconf
-
-* Fri Feb 06 2009 Thomas BURGUIERE <thomas.burguiere@c-s.fr>
-- first creation of the RPM from debian archive
