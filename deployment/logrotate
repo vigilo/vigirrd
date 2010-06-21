@@ -1,6 +1,0 @@
-/var/log/vigilo/vigirrd/*.log {
-    rotate 12
-    monthly
-    notifempty
-    compress
-}
