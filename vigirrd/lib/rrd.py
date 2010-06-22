@@ -168,8 +168,11 @@ def showMergedRRDs(server, template_name, outfile='-', start=0, duration=0, deta
     """showMergedRRDs"""
     graphcfg = conffile.hosts[server]
     if template_name not in graphcfg["graphes"].keys():
-        print "ERROR: The template '%s' does not exist. Available templates: \
-        %s" % (template_name, ", ".join(graphcfg["graphes"].keys()))
+        LOGGER.error("ERROR: The template '%(template)s' does not exist. "
+                    "Available templates: %(available)s", {
+            'template': template_name,
+            'available': ", ".join(graphcfg["graphes"].keys()),
+        })
     template = conffile.templates[graphcfg["graphes"][template_name]["template"]]
     template["name"] = template_name
     template["vlabel"] = graphcfg["graphes"][template_name]["vlabel"]
@@ -559,11 +562,11 @@ class RRD(object):
                 rrdtool.update(*args)
             except rrdtool.error, e:
                 # Daylight savings
-                print "skipped", timestamp
+                LOGGER.info("Skipped daylight savings (timestamp = %s)",
+                            timestamp)
                 continue
 
     def graph(self, template, ds_list, outfile="-", format='PNG', start=0, duration=0, details=True, lazy=True):
-
         if outfile != "-":
             imgdir = os.path.dirname(outfile)
             if not os.path.exists(imgdir):
@@ -618,9 +621,15 @@ class RRD(object):
             a.append("--height")
             a.append(self.cfg["height"])
             a.append("--title")
-            a.append("%s: %s" % (self.server, template["name"]))
+            if len(self.server) > 35:
+                ellipsis_server = self.server[:15] + '(...)' + \
+                                    self.server[-15:]
+            else:
+                ellipsis_server = self.server
+            a.append("%s: %s" % (ellipsis_server, template["name"]))
             a.append("--vertical-label")
             a.append(template["vlabel"])
+            a.append("TEXTALIGN:left")
         if lazy:
             a.append("--lazy")
         # Curve smoothing
@@ -672,20 +681,23 @@ class RRD(object):
                 dsname = d
             if not os.path.exists(rrdfile):
                 raise RRDNotFoundError(rrdfile)
+
+            # Génère un indicateur consolidé "<ds>_orig" correspondant
+            # à la valeur moyenne sur la période et le pas considérés.
             a.append("DEF:%s_orig=%s:%s:AVERAGE" % (i, rrdfile, dsname))
+            # Remplace l'indicateur "<ds>" par la valeur de "<ds>_orig"
+            # généré précédemment, en lui appliquant le facteur approprié.
             a.append("CDEF:%s=%s_orig,%1.10f,*" % (i, i, factor))
 
             graphline = "%s:%s%s:%s" % (params["type"], i, params["color"], \
-            label.ljust(18))
+                label.ljust(18))
 #            LOGGER.debug("params=%s, has_key=%d"%(params, params.has_key("stack")))
             if params.has_key("stack") and params["stack"]:
                 graphline += ":STACK"
 #                LOGGER.debug("added + :STACK to %s"%graphline)
             a.append(graphline)
             for tab in template["tabs"]:
-                a.append("GPRINT:%s:%s:%s"%(i, tab, "%4.0lf %s "))
-            if len(ds_list) > 1:
-                a.append('COMMENT:\\n')
+                a.append("GPRINT:%s:%s:%s" % (i, tab, "%4.0lf %s "))
 
         # rrdtool.graph() ne sait manipuler que le type <str>.
         a = [str(e) for e in a]

@@ -18,7 +18,7 @@ BuildRequires:   python-setuptools
 Requires:   python >= 2.5
 Requires:   python-setuptools
 Requires:   vigilo-turbogears
-Requires:   python-rrdtool
+Requires:   python-rrdtool >= 1.3
 Requires:   python-simplejson
 Requires:   fonts-ttf-dejavu
 Requires:   apache-mod_wsgi
