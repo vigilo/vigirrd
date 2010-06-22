@@ -12,15 +12,11 @@ __all__ = ['setup_app']
 
 log = logging.getLogger(__name__)
 
+def setup_app(command, conf, variables):
+    """Place any commands to setup vigiboard here"""
+    from vigilo.turbogears import populate_db
+    from vigiboard.config.environment import load_environment
 
-def setup_app(command, conf, vars):
-    """Place any commands to setup vigirrd here"""
     load_environment(conf.global_conf, conf.local_conf)
-    # Load the models
-    from vigirrd import model
-    print "Creating tables"
-    model.metadata.create_all(bind=config['pylons.app_globals'].sa_engine)
+    populate_db()
 
-
-    transaction.commit()
-    print "Successfully setup"

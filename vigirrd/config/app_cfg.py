@@ -19,7 +19,6 @@ import os
 from vigilo.turbogears import VigiloAppConfig
 
 import vigirrd
-from vigirrd import model
 from vigirrd.lib import app_globals, helpers 
 
 class VigiRRDConfig(VigiloAppConfig):
