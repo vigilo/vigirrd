@@ -11,21 +11,21 @@ from routes import url_for
 from webtest import TestApp
 from nose.tools import eq_
 
-from vigirrd import model
+from vigilo.models.session import metadata, DBSession
 
 __all__ = ['setup_db', 'teardown_db', 'TestController', 'url_for']
 
 def setup_db():
     """Method used to build a database"""
-    engine = config['pylons.app_globals'].sa_engine 
-    model.init_model(engine)
-    model.metadata.create_all(engine)
+    print "Creating model"
+    engine = config['pylons.app_globals'].sa_engine
+    metadata.create_all(engine)
 
 def teardown_db():
     """Method used to destroy a database"""
+    print "Destroying model"
     engine = config['pylons.app_globals'].sa_engine
-    model.metadata.drop_all(engine)
-
+    metadata.drop_all(engine)
 
 class TestController(object):
     """

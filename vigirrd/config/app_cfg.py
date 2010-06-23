@@ -39,10 +39,6 @@ class VigiRRDConfig(VigiloAppConfig):
 base_config = VigiRRDConfig('vigirrd')
 base_config.package = vigirrd
 
-# Utilisation de fichier à plat dans VigiRRD
-#base_config.model = vigirrd.model
-#base_config.DBSession = vigirrd.model.DBSession
-
 base_config.mimetype_lookup = {
     '.png':'image/png',
     '.csv': 'text/csv',
