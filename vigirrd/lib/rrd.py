@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# vim:set expandtab tabstop=4 shiftwidth=4: 
+# vim:set expandtab tabstop=4 shiftwidth=4:
 ################################################################################
 #
 # RRDGraph Python RRD Graphing library
@@ -148,7 +148,7 @@ def listDS(files):
     dans une série de fichiers RRD.
 
     @param files: Liste de fichiers RRD à analyser.
-    @type: C{list} of C{basestring}
+    @type files: C{list} of C{basestring}
     @return: Listes des noms des sources de données disponibles
         en analysant les fichiers RRD indiqués.
     @rtype: C{list} of C{str}
@@ -214,7 +214,7 @@ def exportCSV(server, graphtemplate, ds, start, end):
     # - renseigné a partir dictionnaires obtenus pour chaque indicateur
     # - sous la forme :
     #   * cle = indice
-    #   * valeur = [TimeStamp, donnee dictionnaire1 pour TimeStamp, ..., 
+    #   * valeur = [TimeStamp, donnee dictionnaire1 pour TimeStamp, ...,
     #                donnee dictionnaireN pour TimeStamp
     @param server : serveur
     @type server : C{str}
@@ -232,7 +232,7 @@ def exportCSV(server, graphtemplate, ds, start, end):
 
     # initialisation
     graphcfg = conffile.hosts[server]
-    
+
     all_ds = graphcfg["graphes"][graphtemplate]["ds"]
 
     # Si l'indicateur est All ou n'existe pas pour cet hôte,
@@ -504,7 +504,7 @@ class RRD(object):
         if not start:
             raise RRDError("All the RRD files look empty !")
         try:
-            end = rrds[-1].getStartTime() + 3600 
+            end = rrds[-1].getStartTime() + 3600
         except RRDError, e: # latest RRD is empty, it's just been created
             end = now
         if end > now:
@@ -638,7 +638,7 @@ class RRD(object):
             a.append("--lazy")
         # Curve smoothing
         a.append("-E")
-        
+
         # Tabs (legend)
         # the number is arbitrary (to help alignment),
         # no label should be longer than this value
@@ -711,9 +711,9 @@ class RRD(object):
 
     def getLastValue(self):
         """
-        lecture derniere valeur RRD
-        @return : valeur
-        @rtype: C{str}
+        Lecture derniere valeur RRD
+        @return: Dernière valeur.
+        @rtype: C{str} ou C{None}
         """
 
         value = None
@@ -736,5 +736,3 @@ class RRD(object):
             return None
 
         return data[0][0]
-
-
