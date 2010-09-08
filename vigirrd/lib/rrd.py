@@ -608,6 +608,10 @@ class RRD(object):
                 "--end", str(end_i),
                 "--imgformat", format,
         ]
+        if template.has_key("options"):
+            for option in template["options"]:
+                a.append(option)
+
         if not details:
             a.append("--no-legend")
 #            a.append("--only-graph")

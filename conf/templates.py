@@ -14,6 +14,22 @@ templates["lines"] = {
         { "type": "LINE1", "color": "#6700ED" },
     ],
 }
+templates["lines-from-zero"] = {
+    "tabs": [ 'AVERAGE', 'MIN', 'MAX', 'LAST'],
+    # Each DS will be assigned a different drawing method, in this order
+    "draw": [
+        { "type": "LINE1", "color": "#EE0088" },
+        { "type": "LINE1", "color": "#FF5500" },
+        { "type": "LINE1", "color": "#FF9900" },
+        { "type": "LINE1", "color": "#FFDD00" },
+        { "type": "LINE1", "color": "#CCFF66" },
+        { "type": "LINE1", "color": "#86ED00" },
+        { "type": "LINE1", "color": "#0086ED" },
+        { "type": "LINE1", "color": "#6700ED" },
+    ],
+    # the low limit of the graph is set to 0
+    "options": ['-l 0'],
+}
 
 templates["areas"] = {
     "tabs": [ 'AVERAGE', 'MIN', 'MAX', 'LAST'],
