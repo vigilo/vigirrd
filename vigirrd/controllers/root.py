@@ -11,7 +11,8 @@ LOGGER = getLogger(__name__)
 import pylons
 from tg import expose, flash, require, url, request, redirect, config, response
 from pylons.i18n import ugettext as _, lazy_ugettext as l_
-from tg.exceptions import HTTPServiceUnavailable, HTTPNotFound
+from tg.exceptions import HTTPServiceUnavailable, HTTPNotFound, \
+                            HTTPInternalServerError
 from tg.controllers import CUSTOM_CONTENT_TYPE
 
 from vigirrd.lib.base import BaseController
@@ -63,8 +64,13 @@ class RootController(BaseController):
         if "details" in kwargs and not (kwargs["details"]):
             details = ""
         duration = int(kwargs.get('duration', 86400))
-        qs = "host=%s&graphtemplate=%s&start=%d&duration=%s&details=%s" \
-                % (kwargs["host"], kwargs["graphtemplate"], start, duration, details)
+        qs = "host=%s&graphtemplate=%s&start=%d&duration=%s&details=%s" % (
+            kwargs["host"],
+            kwargs["graphtemplate"],
+            start,
+            duration,
+            details,
+        )
         if "direct" in kwargs and kwargs["direct"]:
             redirect('/graph.png?%s' % qs)
             return
@@ -109,7 +115,8 @@ class RootController(BaseController):
         duration = int(kwargs["duration"])
         start = int(kwargs["start"])
         filename = "%s_%s_%s_%s_%d.png" % (kwargs["host"],
-                                           re.sub(r"[^\w]", "", kwargs["graphtemplate"]),
+                                           re.sub(r"[^\w]", "",
+                                                kwargs["graphtemplate"]),
                                            start,
                                            duration,
                                            int(details)
@@ -121,9 +128,7 @@ class RootController(BaseController):
         except rrd.RRDNoDSError, e:
             raise HTTPServiceUnavailable(str(e))
         except rrd.RRDNotFoundError, e:
-            #raise HTTPNotFound("No RRD: %s" % str(e))
-            redirect(url('/error'), code=404, message="<p>No RRD: %s</p>" % str(e))
-            return
+            raise HTTPNotFound("No RRD: %s" % str(e))
         if pylons.request.response_type == 'image/png':
             response.headers["Content-Type"] = "image/png"
             response.headers['Pragma'] = 'no-cache'
@@ -147,16 +152,11 @@ class RootController(BaseController):
         conffile.reload()
         server = conffile.hosts[host]
         if not server:
-            redirect(url('/error'), code=500,
-                     message='<p>Host definition is empty</p>')
-            return
+            raise HTTPInternalServerError('Host definition is empty')
         filename = rrd.getEncodedFileName(host, ds)
         if not filename or not os.path.exists(filename):
-            #raise HTTPNotFound('The datasource "%s" does not exist, or has never been collected yet.' % ds)
-            redirect(url('/error'), code=404,
-                     message='<p>The datasource "%s" does not exist, or '
-                             'has never been collected yet.</p>' % ds)
-            return
+            raise HTTPNotFound('The datasource "%s" does not exist, '
+                'or has never been collected yet.' % ds)
         rrdfile = rrd.RRD(filename=str(filename), server=str(host))
         return {"lastvalue": rrdfile.getLastValue(),
                 "host": host,
@@ -191,8 +191,7 @@ class RootController(BaseController):
         start = int(start)
         now = int(time.time())
         if start >= now:
-            redirect(url('/error'), code=404, message='<p>No data yet</p>')
-            return
+            raise HTTPNotFound('No data yet')
         if end is None:
             # one hour plus one second, start should be 1 sec in the past
             end = start + 3600 + 1
