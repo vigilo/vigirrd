@@ -164,7 +164,8 @@ class RootController(BaseController):
                 }
 
     @expose(content_type=CUSTOM_CONTENT_TYPE)
-    def export(self, host, graphtemplate, ds=None, start=None, end=None, nocache=None):
+    def export(self, host, graphtemplate, ds=None,
+        start=None, end=None, nocache=None):
         '''
         export CSV
 

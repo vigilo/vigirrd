@@ -71,64 +71,20 @@ def dateToTimestamp(date):
     """
     return time.mktime(dateToDateObj(date).timetuple())
 
-def listFiles(host, start=0, duration=0):
+def listFiles(host):
     """
     List the relevant RRD files for the specified host during the \
     specified time
     """
-    day_dirs = []
-    available_day_dirs = os.listdir(config.get("rrd_base"))
-    available_day_dirs.sort()
-    if start == 0 and duration == 0:
-        day_dirs = available_day_dirs
-    else:
-        before_start = True
-        after_end = False
-        # Compute timestamp of the first available RRD
-        first_available_day = dateToTimestamp(available_day_dirs[0])
-        # Compute start and end days
-        # Compensate for the timezone (GMT+2, Europe/Paris hardcoded here... FIXME)
-        start = start - 2 * 3600
-        #print first_available_day, start, duration
-        # We want data from the start
-        if start == 0 or start < first_available_day:
-            before_start = False
-        if duration == 0: # we want data down to the end
-            end = None
-        else:
-            if start == 0:
-                end = first_available_day + duration
-            else:
-                end = start + duration
-        # convert to date objects to compare without hours
-        start_date = datetime.date.fromtimestamp(start)
-        if end is not None:
-            end_date = datetime.date.fromtimestamp(end)
-        for available_day_dir in available_day_dirs:
-            #print available_day_dir
-            #available_day = dateToTimestamp(available_day_dir)
-            available_day = dateToDateObj(available_day_dir)
-            #print datetime.datetime.fromtimestamp(available_day), datetime.datetime.fromtimestamp(start), datetime.datetime.fromtimestamp(end)
-            if available_day >= start_date:
-                before_start = False
-            if end is not None and available_day >= end_date:
-                after_end = True
-            #print before_start
-            if not before_start:
-                #print "adding %s" % available_day_dir
-                day_dirs.append(available_day_dir)
-            if after_end:
-                break
-        #print datetime.datetime.fromtimestamp(start)
-        #print day_dirs
+    host_dirs = os.listdir(config.get("rrd_base"))
+    host_dirs.sort()
+
     files = []
-    for day_dir in day_dirs:
-        #LOGGER.debug(config.get("rrd_base")+"/"+day_dir+"/*/"+host+".rrd")
-        #files.extend(glob.glob(config.get("rrd_base")+"/"+day_dir+"/*/"+host+".rrd"))
-        LOGGER.debug(config.get("rrd_base")+"/"+day_dir+"/*"+".rrd")
-        files.extend(glob.glob(config.get("rrd_base")+"/"+day_dir+"/*"+".rrd"))
+    for host_dir in host_dirs:
+        rrd_pattern = config.get("rrd_base") + "/" + host_dir + "/*.rrd"
+        LOGGER.debug(rrd_pattern)
+        files.extend(glob.glob(rrd_pattern))
     files.sort()
-    #print files
     return files
 
 def getStartTime(host):
@@ -140,7 +96,8 @@ def getStartTime(host):
             return rrd.getStartTime()
         except RRDError:
             continue
-    raise RRDError("Can't find the first timestamp available for host %s." % host)
+    raise RRDError("Can't find the first timestamp available "
+                    "for host %s." % host)
 
 def listDS(files):
     """
@@ -164,16 +121,21 @@ def listDS(files):
     list_l.sort()
     return list_l
 
-def showMergedRRDs(server, template_name, outfile='-', start=0, duration=0, details=1):
+def showMergedRRDs(server, template_name, outfile='-',
+    start=0, duration=0, details=1):
     """showMergedRRDs"""
-    graphcfg = conffile.hosts[server]
+    try:
+        graphcfg = conffile.hosts[server]
+    except KeyError:
+        raise RRDNotFoundError, server
     if template_name not in graphcfg["graphes"].keys():
         LOGGER.error("ERROR: The template '%(template)s' does not exist. "
                     "Available templates: %(available)s", {
             'template': template_name,
             'available': ", ".join(graphcfg["graphes"].keys()),
         })
-    template = conffile.templates[graphcfg["graphes"][template_name]["template"]]
+    template = conffile.templates[graphcfg["graphes"][template_name] \
+        ["template"]]
     template["name"] = template_name
     template["vlabel"] = graphcfg["graphes"][template_name]["vlabel"]
     template["factors"] = graphcfg["graphes"][template_name]["factors"]
@@ -242,7 +204,8 @@ def exportCSV(server, graphtemplate, ds, start, end):
     elif isinstance(ds, basestring):
         ds_list = [ds,]
 
-    template = conffile.templates[graphcfg["graphes"][graphtemplate]["template"]]
+    template = conffile.templates[graphcfg["graphes"][graphtemplate] \
+        ["template"]]
     template["name"] = graphtemplate
     template["vlabel"] = graphcfg["graphes"][graphtemplate]["vlabel"]
     template["factors"] = graphcfg["graphes"][graphtemplate]["factors"]
@@ -299,7 +262,7 @@ def getExportFileName(host, ds_graph, start, end):
 
     @param host : hôte
     @type host : C{str}
-    @param ds_graph : indicateur graphe ( nom du graphe ou d un des indicateurs)
+    @param ds_graph : indicateur graphe (nom du graphe ou d'un des indicateurs)
     @type ds_graph : C{str}
     @param start : date-heure de debut des donnees
     @type start : C{str}
@@ -398,7 +361,6 @@ class RRD(object):
                 break
             first = first + step
         if first >= end:
-            #print self.filename
             raise RRDError("The RRD file looks empty !")
         return first
 
@@ -446,11 +408,15 @@ class RRD(object):
             end = start + 3600 + 1
 
         if end > now:
-            LOGGER.debug("truncating %s to %d instead of %d"%(self.filename, now, end))
+            LOGGER.debug("truncating %(filename)s to %(now)d "
+                "instead of %(end)d", {
+                    'filename': self.filename,
+                    'now': now,
+                    'end': end,
+                })
             end = now
         LOGGER.debug("%s AVERAGE --start %s --end %s" % \
                         (self.filename, str(start), str(end)))
-        #print "%s AVERAGE --start %s --end %s" % (self.filename, time.ctime(start), time.ctime(end))
 
         info , ds_rrd , data = rrdtool.fetch(str(self.filename), "AVERAGE", \
                                    "--start", str(start), "--end", str(end))
@@ -566,7 +532,8 @@ class RRD(object):
                             timestamp)
                 continue
 
-    def graph(self, template, ds_list, outfile="-", format='PNG', start=0, duration=0, details=True, lazy=True):
+    def graph(self, template, ds_list, outfile="-", format='PNG',
+        start=0, duration=0, details=True, lazy=True):
         if outfile != "-":
             imgdir = os.path.dirname(outfile)
             if not os.path.exists(imgdir):
@@ -695,7 +662,8 @@ class RRD(object):
 
             graphline = "%s:%s%s:%s" % (params["type"], i, params["color"], \
                 label.ljust(18))
-#            LOGGER.debug("params=%s, has_key=%d"%(params, params.has_key("stack")))
+#            LOGGER.debug("params=%s, has_key=%d" %
+#                (params, params.has_key("stack")))
             if params.has_key("stack") and params["stack"]:
                 graphline += ":STACK"
 #                LOGGER.debug("added + :STACK to %s"%graphline)
