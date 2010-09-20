@@ -9,6 +9,8 @@ CODEPATH := $(NAME)
 
 install:
 	$(PYTHON) setup.py install --single-version-externally-managed --root=$(DESTDIR) --record=INSTALLED_FILES
+	chmod a+rX -R $(DESTDIR)$(PREFIX)/lib*/python*/*
+	# Apache
 	mkdir -p $(DESTDIR)$(HTTPD_DIR)
 	ln -f -s $(SYSCONFDIR)/vigilo/$(NAME)/$(NAME).conf $(DESTDIR)$(HTTPD_DIR)/
 	echo $(HTTPD_DIR)/$(NAME).conf >> INSTALLED_FILES
