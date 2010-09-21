@@ -129,7 +129,7 @@ make install \
 make apidoc || :
 
 # Vigiconf
-ln -s %{_sysconfdir}/vigilo/vigiconf/prod/rrdgraph.conf.py \
+ln -s %{_sysconfdir}/vigilo/vigiconf/prod/vigirrd.conf.py \
     $RPM_BUILD_ROOT%{_sysconfdir}/vigilo/%{module}/graphs.conf.py
 
 #%find_lang %{name}
