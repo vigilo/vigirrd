@@ -139,7 +139,7 @@ rm -rf $RPM_BUILD_ROOT
 
 
 %files
-%defattr(-,root,root)
+%defattr(644,root,root,755)
 %doc COPYING 
 %dir %{_sysconfdir}/vigilo
 %dir %{_sysconfdir}/vigilo/%{module}
@@ -158,6 +158,6 @@ rm -rf $RPM_BUILD_ROOT
 %{python26_sitelib}/*
 
 %files vigiconf
-%defattr(-,root,root)
+%defattr(644,root,root,755)
 %{_sysconfdir}/vigilo/%{module}/graphs.conf.py
 
