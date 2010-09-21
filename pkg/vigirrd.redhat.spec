@@ -145,8 +145,8 @@ rm -rf $RPM_BUILD_ROOT
 %dir %{_sysconfdir}/vigilo/%{module}
 %config(noreplace) %{_sysconfdir}/vigilo/%{module}/*.conf
 %config(noreplace) %{_sysconfdir}/vigilo/%{module}/*.py
-%config(noreplace) %{_sysconfdir}/vigilo/%{module}/*.ini
 %config(noreplace) %{_sysconfdir}/vigilo/%{module}/*.wsgi
+%config(noreplace) %attr(640,root,apache) %{_sysconfdir}/vigilo/%{module}/*.ini
 %ghost %{_sysconfdir}/vigilo/%{module}/*.pyo
 %ghost %{_sysconfdir}/vigilo/%{module}/*.pyc
 %exclude %{_sysconfdir}/vigilo/%{module}/graphs.conf.py

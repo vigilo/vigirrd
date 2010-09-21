@@ -10,6 +10,10 @@ CODEPATH := $(NAME)
 install:
 	$(PYTHON) setup.py install --single-version-externally-managed --root=$(DESTDIR) --record=INSTALLED_FILES
 	chmod a+rX -R $(DESTDIR)$(PREFIX)/lib*/python*/*
+	# Permissions de la conf
+	chmod a+rX -R $(DESTDIR)$(SYSCONFDIR)/vigilo/$(NAME)
+	[ `id -u` -eq 0 ] && chgrp $(HTTPD_USER) $(DESTDIR)$(SYSCONFDIR)/vigilo/$(NAME)/*.ini
+	chmod 600 $(DESTDIR)$(SYSCONFDIR)/vigilo/$(NAME)/*.ini
 	# Apache
 	mkdir -p $(DESTDIR)$(HTTPD_DIR)
 	ln -f -s $(SYSCONFDIR)/vigilo/$(NAME)/$(NAME).conf $(DESTDIR)$(HTTPD_DIR)/
