@@ -13,7 +13,7 @@ Name:       %{name}
 Summary:    Web interface to display RRD files in vigilo
 Version:    %{version}
 Release:    %{release}
-Source0:    %{name}-%{version}.tar.gz
+Source0:    %{module}-%{version}.tar.gz
 URL:        http://www.projet-vigilo.org
 Group:      System/Servers
 BuildRoot:  %{_tmppath}/%{name}-%{version}-%{release}-build
@@ -115,7 +115,7 @@ This package creates the links to use Vigiconf's generated configuration files
 with VigiRRD.
 
 %prep
-%setup -q
+%setup -q -n %{module}-%{version}
 
 %build
 
