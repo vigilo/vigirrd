@@ -1,2 +1,3 @@
 recursive-include vigirrd/i18n *
 recursive-include vigirrd/templates *
+recursive-include buildenv Makefile.common buildout.*.cfg
