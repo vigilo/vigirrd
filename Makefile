@@ -23,6 +23,10 @@ install:
 	mv $(DESTDIR)`grep '$(NAME)/config/app_cfg.py$$' INSTALLED_FILES` $(DESTDIR)$(SYSCONFDIR)/vigilo/$(NAME)/
 	ln -s $(SYSCONFDIR)/vigilo/$(NAME)/app_cfg.py $(DESTDIR)`grep '$(NAME)/config/app_cfg.py$$' INSTALLED_FILES`
 	echo $(SYSCONFDIR)/vigilo/$(NAME)/app_cfg.py >> INSTALLED_FILES
+	# Cache
+	mkdir -p $(DESTDIR)$(LOCALSTATEDIR)/cache/vigilo/sessions
+	chmod 750 $(DESTDIR)$(LOCALSTATEDIR)/cache/vigilo/sessions
+	[ `id -u` -ne 0 ] || chown $(HTTPD_USER): $(DESTDIR)$(LOCALSTATEDIR)/cache/vigilo/sessions
 
 lint: lint_pylint
 tests: tests_nose

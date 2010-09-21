@@ -148,6 +148,7 @@ rm -rf $RPM_BUILD_ROOT
 %config(noreplace) %{_sysconfdir}/cron.d/*
 %dir %{_localstatedir}/log/vigilo/
 %attr(750,apache,apache) %{_localstatedir}/log/vigilo/%{module}
+%attr(750,apache,apache) %{_localstatedir}/cache/vigilo/sessions
 %{python_sitelib}/*
 
 %files vigiconf
