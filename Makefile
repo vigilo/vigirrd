@@ -7,7 +7,7 @@ PKGNAME := $(NAME)
 MODULE := $(NAME)
 CODEPATH := $(NAME)
 
-install:
+install: $(PYTHON)
 	$(PYTHON) setup.py install --single-version-externally-managed --root=$(DESTDIR) --record=INSTALLED_FILES
 	chmod a+rX -R $(DESTDIR)$(PREFIX)/lib*/python*/*
 	# Permissions de la conf
