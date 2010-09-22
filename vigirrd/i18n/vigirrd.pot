@@ -8,16 +8,16 @@ msgid ""
 msgstr ""
 "Project-Id-Version: vigirrd 2.0.0\n"
 "Report-Msgid-Bugs-To: contact@projet-vigilo.org\n"
-"POT-Creation-Date: 2010-05-12 11:49+0200\n"
+"POT-Creation-Date: 2010-09-10 11:47+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=utf-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"Generated-By: Babel 0.9.4\n"
+"Generated-By: Babel 0.9.5\n"
 
-#: vigirrd/lib/rrd.py:633
+#: vigirrd/lib/rrd.py:612
 msgid "value"
 msgstr ""
 
@@ -42,6 +42,10 @@ msgstr ""
 
 #: vigirrd/templates/graph.html:15
 msgid "Back to servers list"
+msgstr ""
+
+#: vigirrd/templates/graph.html:16
+msgid "Back to graphs list"
 msgstr ""
 
 #: vigirrd/templates/graphs.html:13
