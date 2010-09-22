@@ -16,7 +16,7 @@ from vigirrd.lib import rrd, conffile
 
 class RRDclass(unittest.TestCase):
     """Test the module-level functions in RRDGraph"""
-    
+
     application_under_test = 'main_without_authn'
 
     def __init__(self, *args, **kwargs):
@@ -61,7 +61,7 @@ class RRDclass(unittest.TestCase):
         result = None
         if self.rrd is not None:
             result = self.rrd.getStep()
-        assert(result == step, "getStep() does not work")
+        self.assertEqual(result, step, "getStep() does not work")
 
     def test_getstarttime(self):
         '''Détection de l'heure de début des données de performance.'''
@@ -72,7 +72,7 @@ class RRDclass(unittest.TestCase):
         if self.rrd is not None:
             result = self.rrd.getStartTime()
 
-        assert(result == value, "getStartTime() does not work")
+        self.assertEqual(result, value, "getStartTime() does not work")
 
     def test_getds(self):
         '''Récupération de la configuration d'une source de données.'''
@@ -86,14 +86,14 @@ class RRDclass(unittest.TestCase):
         if self.rrd is not None:
             result = self.rrd.getDS()
 
-        assert (result == answer, "getDS() does not work")
+        self.assertEqual(result, answer, "getDS() does not work")
 
     def test_listds(self):
         '''Liste des sources de données d'un fichiers RRD.'''
         result = None
         if self.rrd is not None:
             result = self.rrd.listDS()
-        assert(result == ["DS"], "listDS() does not work")
+        self.assertEqual(result, ["DS"], "listDS() does not work")
 
     def test_fetchdata(self):
         '''Récupération des données de métrologie d'une source.'''
@@ -116,7 +116,7 @@ class RRDclass(unittest.TestCase):
         if self.rrd is not None:
             result = self.rrd.fetchData("DS")
 
-        assert(result == answer, "fetchData() does not work")
+        self.assertEqual(result, answer, "fetchData() does not work")
 
     def test_graph(self):
         '''Génération d'un graphe à partir des données de métrologie.'''
@@ -136,19 +136,19 @@ class RRDclass(unittest.TestCase):
                 # Comparaison du graphe généré avec le graphe de référence.
                 result = filecmp.cmp(tmpfile, graphfile)
         shutil.rmtree(tmpdir)
-        assert(result == True, "The generated graph is different")
+        self.assertEqual(result, True, "The generated graph is different")
 
     def test_getLastValue(self):
         '''Récupération de la dernière valeur de métrologie dans un RRD.'''
         result = None
         if self.rrd is not None:
             result = self.rrd.getLastValue()
-        assert(result != None, "getLastValue() does not work")
+        self.assertEqual(result, None, "getLastValue() does not work")
 
     def test_exportCSV(self):
         '''Export des données au format CSV.'''
 
-        
+
         server = 'testserver'
         graphtemplate = 'UpTime'
         indicator = 'All'
@@ -170,6 +170,6 @@ class RRDclass(unittest.TestCase):
 
         # On compare l'export au résultat attendu.
         normalized_output = output.replace("\r\n", "\n")
-        self.assertEquals(csv_data, normalized_output)
+        self.assertEqual(csv_data, normalized_output)
 
 # vim:set expandtab tabstop=4 shiftwidth=4:
