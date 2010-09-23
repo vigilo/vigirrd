@@ -598,7 +598,13 @@ class RRD(object):
         a = [str(e) for e in a]
         LOGGER.debug("rrdtool graph '%s'" % "' '".join(a))
 
-        lang = request.accept_language.best_matches()
+        try:
+            lang = request.accept_language.best_matches()
+        except TypeError:
+            # Lorsque le thread n'a pas de "request" associée
+            # (ex: dans les tests unitaires), TypeError est levée.
+            lang = None
+
         if lang:
             selected_locale = lang[0].replace('-', '_')
             LOGGER.debug(u"Trying to set rrdtool's locale to %s" %
