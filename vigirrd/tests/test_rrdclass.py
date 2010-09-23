@@ -74,30 +74,15 @@ class RRDclass(unittest.TestCase):
 
         self.assertEqual(result, value, "getStartTime() does not work")
 
-    def test_getds(self):
-        '''Récupération de la configuration d'une source de données.'''
-
-        answer = {'DS': {'min': None, 'max': None, 'unknown_sec': 0,
-                             'minimal_heartbeat': 600, 'value': 46814384.0,
-                             'ds_name': 'DS', 'type': 'GAUGE', 'last_ds': '254426',
-                            } }
-
-        result = None
-        if self.rrd is not None:
-            result = self.rrd.getDS()
-
-        self.assertEqual(result, answer, "getDS() does not work")
-
-    def test_listds(self):
-        '''Liste des sources de données d'un fichiers RRD.'''
-        result = None
-        if self.rrd is not None:
-            result = self.rrd.listDS()
-        self.assertEqual(result, ["DS"], "listDS() does not work")
-
     def test_fetchdata(self):
         '''Récupération des données de métrologie d'une source.'''
         answer = {
+            # Les valeurs sont légèrement différentes entre une architecture
+            # 32 bits et une 64 bits (précision différente des valeurs).
+            "32": {
+
+            },
+            "64": {
                   1232694600: [74541.386666666673, None],
                   1232694900: [74841.613333333327, None],
                   1232695200: [75141.386666666673, None],
@@ -110,13 +95,14 @@ class RRDclass(unittest.TestCase):
                   1232697300: [77241.613333333327, None],
                   1232697600: [77541.0, None],
                   1232697900: [77841.386666666673, None],
-                 }
+            },
+        }
 
         result = None
         if self.rrd is not None:
             result = self.rrd.fetchData("DS")
 
-        self.assertEqual(result, answer, "fetchData() does not work")
+        self.assertEqual(result, answer[self.arch], "fetchData() does not work")
 
     def test_graph(self):
         '''Génération d'un graphe à partir des données de métrologie.'''

@@ -309,21 +309,6 @@ class RRD(object):
         if server is not None:
             self.cfg = conffile.hosts[server]
 
-    def getDS(self):
-        """Gets DataSources in the RRD with their properties"""
-        result = {}
-        result_info = rrdtool.info(self.filename)
-        for k in result_info:
-            if k.startswith('ds'):
-                result[k] = result_info[k]
-        return result
-
-    def listDS(self):
-        """Lists DataSources in the RRD"""
-        list_l = self.getDS().keys()
-        list_l.sort()
-        return list_l
-
     def getGraphes(self):
         """Gets templated graphes"""
         return self.cfg["graphes"]
@@ -446,68 +431,6 @@ class RRD(object):
                 break
 
         return res
-
-    def createNewRRD(self, files, ds_list=[]):
-        """
-        Creates a new empty RRD with all the parameters from the given files
-        """
-        if files == []: # No files ??
-            raise RRDError("No files !!")
-        rrds = []
-        for file_l in files:
-            rrds.append(RRD(file_l))
-        step = rrds[-1].getStep()
-        now = int(time.time())
-        start = None
-        for rrdfile in rrds:
-            try:
-                # First entry is one step behind
-                start = rrdfile.getStartTime() - 1 - step
-                break
-            except RRDError:
-                # The file is completely empty, try the next one
-                continue
-        if not start:
-            raise RRDError("All the RRD files look empty !")
-        try:
-            end = rrds[-1].getStartTime() + 3600
-        except RRDError, e: # latest RRD is empty, it's just been created
-            end = now
-        if end > now:
-            LOGGER.debug("truncating to %d instead of %d"%(now, end))
-            end = now
-        LOGGER.debug("creating rrd : start: %s, end: %s" % (start, end))
-        # get the list of all the DS in the files, with their properties
-        new_ds = {}
-        for rrd in rrds:
-            new_ds.update(rrd.getDS())
-        LOGGER.debug("DS: %s" % ", ".join(new_ds))
-        # Did we ask for existing DSs ?
-        for ds in ds_list:
-            if ds not in new_ds:
-                raise RRDNoDSError('The DS "%s" does not exist' % ds)
-        if ds_list == []:
-            ds_list = new_ds
-        # prepare the rrdtool command
-        args = [self.filename, "--start", str(start), "--step", str(step)]
-        for ds in ds_list:
-            type_l = new_ds[ds]["type"]
-            # The derivation has already been done, force to GAUGE
-            if type_l == "COUNTER":
-                type_l = "GAUGE"
-            min_l = new_ds[ds]["min"]
-            if min_l is None:
-                min_l = "U"
-            max_l = new_ds[ds]["max"]
-            if max_l is None:
-                max_l = "U"
-            args.append("DS:%s:%s:%s:%s:%s" % ( ds, type_l, \
-            new_ds[ds]["minimal_heartbeat"], min_l, max_l))
-        duration = (end - start) / 60 # in minutes
-        args.append("RRA:AVERAGE:0.5:1:%s" % duration) # one day
-        # Create the file
-        LOGGER.debug("rrdtool create %s" % " ".join(args))
-        rrdtool.create(*args)
 
     def update(self, ds_list, data):
         """Updates the given ds in the RRD with the given values"""
