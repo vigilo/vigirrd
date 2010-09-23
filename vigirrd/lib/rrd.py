@@ -40,7 +40,7 @@ from cStringIO import StringIO
 from logging import getLogger
 LOGGER = getLogger(__name__)
 
-from tg import config
+from tg import config, request
 from pylons.i18n import ugettext as _, lazy_ugettext as l_
 
 from vigirrd.lib import conffile
@@ -597,6 +597,15 @@ class RRD(object):
         # rrdtool.graph() ne sait manipuler que le type <str>.
         a = [str(e) for e in a]
         LOGGER.debug("rrdtool graph '%s'" % "' '".join(a))
+
+        lang = request.accept_language.best_matches()
+        if lang:
+            selected_locale = lang[0].replace('-', '_')
+            LOGGER.debug(u"Trying to set rrdtool's locale to %s" %
+                selected_locale)
+            # D'après plusieurs posts sur internet, rrdtool
+            # ne fonctionne qu'avec les locales utilisant UTF-8.
+            os.environ['LC_TIME'] = selected_locale
         rrdtool.graph(*a)
 
 
