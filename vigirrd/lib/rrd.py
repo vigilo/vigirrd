@@ -163,7 +163,7 @@ def getEncodedFileName(server, ds):
         cet hôte/indicateur.
     @rtype: C{str}
     """
-    ds_encoded = urllib.quote(ds).strip()
+    ds_encoded = urllib.quote_plus(ds).strip()
     filename = "%s/%s/%s.rrd" % (config.get("rrd_base"), server, ds_encoded)
     return filename
 
