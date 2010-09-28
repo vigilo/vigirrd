@@ -222,6 +222,7 @@ def exportCSV(server, graphtemplate, ds, start, end):
     # L'horodatage arrive toujours en premier. Ensuite, les valeurs
     # arrivent dans l'ordre des indicateurs donnés dans ds_list.
     result = []
+    format = config.get('csv_date_format')
     for ds in ds_list:
         tmp_rrd = RRD(filename=ds_map[ds], server=server)
         # Récupère les données de l'indicateur sous la forme suivante :
@@ -237,10 +238,22 @@ def exportCSV(server, graphtemplate, ds, start, end):
             # c'est qu'il s'agit du premier indicateur que l'on traite.
             # On ajoute donc le timestamp à la liste avant tout.
             if len(result) <= index:
-                result.append([timestamp])
+                # Le timestamp est ajouté, une première fois pour trier
+                # les valeurs ensuite, une seconde fois (potentiellement
+                # formatté) selon le choix de l'administrateur.
+                if format is None:
+                    result.append([timestamp, timestamp])
+                else:
+                    date = datetime.datetime.utcfromtimestamp(timestamp
+                        ).strftime(format.encode('utf8')).decode('utf8')
+                    result.append([timestamp, date])
             result[index].append(values_ind[timestamp][0])
 
+    # On trie les valeurs par timestamp ascendant
+    # et on supprime la 1ère valeur de chaque entrée
+    # qui n'a servi qu'au tri.
     result = sorted(result, key=lambda r: int(r[0]))
+    result = [r[1:] for r in result]
 
     buf = StringIO()
     csv_writer = csv.writer(buf,
