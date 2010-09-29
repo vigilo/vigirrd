@@ -24,72 +24,10 @@ BuildRequires:   python26-distribute
 
 Requires:   python26-distribute
 Requires:   vigilo-turbogears
-Requires:   python26-rrdtool >= 1.3
+Requires:   rrdtool-python26 >= 1.3
 Requires:   python26-simplejson
-Requires:   fonts-ttf-dejavu
-Requires:   apache-mod_wsgi
-
-######### Dependance from python dependance tree ########
-Requires:   vigilo-common
-Requires:   vigilo-models
-Requires:   vigilo-themes-default
-Requires:   vigilo-turbogears
-Requires:   python26-addons
-Requires:   python26-babel
-Requires:   python26-beaker
-Requires:   python26-bytecodeassembler
-Requires:   python26-configobj
-Requires:   python26-decorator
-Requires:   python26-decoratortools
-Requires:   python26-EggTranslations
-Requires:   python26-extremes
-Requires:   python26-formencode
-Requires:   python26-genshi
-Requires:   python26-mako
-Requires:   python26-nose
-Requires:   python26-paste
-Requires:   python26-pastedeploy
-Requires:   python26-pastescript
-Requires:   python26-peak-rules
-Requires:   python26-prioritized_methods
-Requires:   python26-psycopg2
-Requires:   python26-pygments
-Requires:   python26-pylons
-Requires:   python26-dateutil
-Requires:   python26-repoze.tm2
-Requires:   python26-repoze.what
-Requires:   python26-repoze.what.plugins.sql
-Requires:   python26-repoze.what-pylons
-Requires:   python26-repoze.what-quickstart
-Requires:   python26-repoze.who
-Requires:   python26-repoze.who-friendlyform
-Requires:   python26-repoze.who.plugins.sa
-Requires:   python26-repoze.who-testutil
-Requires:   python26-routes
-Requires:   python26-rum
-Requires:   python26-RumAlchemy
-Requires:   python26-distribute
-Requires:   python26-simplejson
-Requires:   python26-sqlalchemy
-Requires:   python26-sqlalchemy-migrate
-Requires:   python26-symboltype
-Requires:   python26-tempita
-Requires:   python26-tg.devtools
-Requires:   python26-TgRum
-Requires:   python26-toscawidgets
-Requires:   python26-transaction
-Requires:   python26-turbogears2
-Requires:   python26-turbojson
-Requires:   python26-tw.dojo
-Requires:   python26-tw.forms
-Requires:   python26-tw.rum
-Requires:   python26-weberror
-Requires:   python26-webflash
-Requires:   python26-webhelpers
-Requires:   python26-webob
-Requires:   python26-webtest
-Requires:   python26-zope-interface
-Requires:   python26-zope.sqlalchemy
+Requires:   dejavu-lgc-fonts
+Requires:   mod_wsgi
 
 # For the api doc generation
 #BuildRequires: epydoc python26-rrdtool
@@ -107,8 +45,6 @@ This application is part of the Vigilo Project <http://vigilo-project.org>
 Summary:    Vigiconf setup for VigiRRD
 Requires:   vigilo-vigirrd
 Group:      System/Servers
-Obsoletes:  %{name}-confmgr < 1.13-2
-Provides:   %{name}-confmgr = %{version}-%{release}
 
 %description vigiconf
 This package creates the links to use Vigiconf's generated configuration files
