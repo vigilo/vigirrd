@@ -27,7 +27,7 @@ Requires:   vigilo-turbogears
 Requires:   rrdtool-python26 >= 1.3
 Requires:   python26-simplejson
 Requires:   dejavu-lgc-fonts
-Requires:   mod_wsgi
+Requires:   mod_wsgi-python26
 
 # For the api doc generation
 #BuildRequires: epydoc python26-rrdtool
