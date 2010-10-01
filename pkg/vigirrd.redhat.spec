@@ -35,7 +35,6 @@ Requires:   mod_wsgi-python26
 Obsoletes:  vigilo-rrdgraph <= 2.0.1
 Provides:   vigilo-rrdgraph = %{version}-%{release}
 
-
 %description
 Web interface to display RRD files
 Web interface based on mod_python to display the RRD graphs.
@@ -43,7 +42,7 @@ This application is part of the Vigilo Project <http://vigilo-project.org>
 
 %package    vigiconf
 Summary:    Vigiconf setup for VigiRRD
-Requires:   vigilo-vigirrd
+Requires:   %{name}
 Group:      System/Servers
 
 %description vigiconf
