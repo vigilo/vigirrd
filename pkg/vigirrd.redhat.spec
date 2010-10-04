@@ -42,8 +42,9 @@ This application is part of the Vigilo Project <http://vigilo-project.org>
 
 %package    vigiconf
 Summary:    Vigiconf setup for VigiRRD
-Requires:   %{name}
 Group:      System/Servers
+Requires:   %{name}
+Requires:   vigilo-vigiconf-local
 
 %description vigiconf
 This package creates the links to use Vigiconf's generated configuration files

@@ -100,8 +100,9 @@ This application is part of the Vigilo Project <http://vigilo-project.org>
 
 %package    vigiconf
 Summary:    Vigiconf setup for VigiRRD
-Requires:   vigilo-vigirrd
 Group:      System/Servers
+Requires:   %{name}
+Requires:   vigilo-vigiconf-local
 Obsoletes:  %{name}-confmgr < 1.13-2
 Provides:   %{name}-confmgr = %{version}-%{release}
 
