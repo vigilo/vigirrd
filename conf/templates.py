@@ -46,6 +46,23 @@ templates["areas"] = {
     ],
 }
 
+templates["areas-from-zero"] = {
+    "tabs": [ 'AVERAGE', 'MIN', 'MAX', 'LAST'],
+    # Each DS will be assigned a different drawing method, in this order
+    "draw": [
+        { "type": "AREA", "color": "#EE0088" },
+        { "type": "AREA", "color": "#FF5500" },
+        { "type": "AREA", "color": "#FF9900" },
+        { "type": "AREA", "color": "#FFDD00" },
+        { "type": "AREA", "color": "#CCFF66" },
+        { "type": "AREA", "color": "#86ED00" },
+        { "type": "AREA", "color": "#0086ED" },
+        { "type": "AREA", "color": "#6700ED" },
+    ],
+    # the low limit of the graph is set to 0
+    "options": ['-l 0'],
+}
+
 templates["area-line"] = {
     "tabs": [ 'AVERAGE', 'MIN', 'MAX', 'LAST'],
     "draw": [
