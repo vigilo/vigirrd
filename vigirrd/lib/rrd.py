@@ -515,7 +515,9 @@ class RRD(object):
             for option in template["options"]:
                 a.append(option)
 
+        a.append("--title")
         if not details:
+            a.append(template["name"])
             a.append("--no-legend")
 #            a.append("--only-graph")
             a.append("--width")
@@ -523,17 +525,16 @@ class RRD(object):
             a.append("--height")
             a.append(64)
         else:
-            a.append("--width")
-            a.append(self.cfg["width"])
-            a.append("--height")
-            a.append(self.cfg["height"])
-            a.append("--title")
             if len(self.server) > 35:
                 ellipsis_server = self.server[:15] + '(...)' + \
                                     self.server[-15:]
             else:
                 ellipsis_server = self.server
             a.append("%s: %s" % (ellipsis_server, template["name"]))
+            a.append("--width")
+            a.append(self.cfg["width"])
+            a.append("--height")
+            a.append(self.cfg["height"])
             a.append("--vertical-label")
             a.append(template["vlabel"])
             a.append("TEXTALIGN:left")

@@ -28,18 +28,18 @@ __all__ = ['RootController']
 class RootController(BaseController):
     """
     The root controller for the vigirrd application.
-    
+
     All the other controllers and WSGI applications should be mounted on this
     controller. For example::
-    
+
         panel = ControlPanelController()
         another_app = AnotherWSGIApplication()
-    
+
     Keep in mind that WSGI applications shouldn't be mounted directly: They
     must be wrapped around with :class:`tg.controllers.WSGIAppController`.
-    
+
     """
-    
+
     error = ErrorController()
 
     @expose()
@@ -61,7 +61,7 @@ class RootController(BaseController):
         else:
             start = int(time.time()) - 86400 # Par défaut: 24 heures avant
         details = "1"
-        if "details" in kwargs and not (kwargs["details"]):
+        if "details" in kwargs and kwargs["details"] == "0":
             details = ""
         duration = int(kwargs.get('duration', 86400))
         qs = "host=%s&graphtemplate=%s&start=%d&duration=%s&details=%s" % (
@@ -173,7 +173,7 @@ class RootController(BaseController):
         # - renseigné a partir dictionnaires obtenus pour chaque indicateur
         # - sous la forme :
         #   * cle = indice
-        #   * valeur = [TimeStamp, donnee dictionnaire1 pour TimeStamp, ..., 
+        #   * valeur = [TimeStamp, donnee dictionnaire1 pour TimeStamp, ...,
         #     donnee dictionnaireN pour TimeStamp
 
         @param host: serveur
