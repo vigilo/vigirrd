@@ -77,32 +77,25 @@ class RRDclass(unittest.TestCase):
     def test_fetchdata(self):
         '''Récupération des données de métrologie d'une source.'''
         answer = {
-            # Les valeurs sont légèrement différentes entre une architecture
-            # 32 bits et une 64 bits (précision différente des valeurs).
-            "32": {
-
-            },
-            "64": {
-                  1232694600: [74541.386666666673, None],
-                  1232694900: [74841.613333333327, None],
-                  1232695200: [75141.386666666673, None],
-                  1232695500: [75442.0, None],
-                  1232695800: [75741.613333333327, None],
-                  1232696100: [76041.386666666673, None],
-                  1232696400: [76342.0, None],
-                  1232696700: [76642.0, None],
-                  1232697000: [76942.0, None],
-                  1232697300: [77241.613333333327, None],
-                  1232697600: [77541.0, None],
-                  1232697900: [77841.386666666673, None],
-            },
+            1232695200: [75141.386666999999, None],
+            1232697600: [77541.0, None],
+            1232696100: [76041.386666999999, None],
+            1232694600: [74541.386666999999, None],
+            1232697900: [77841.386666999999, None],
+            1232695500: [75442.0, None],
+            1232696400: [76342.0, None],
+            1232697000: [76942.0, None],
+            1232694900: [74841.613333000001, None],
+            1232695800: [75741.613333000001, None],
+            1232697300: [77241.613333000001, None],
+            1232696700: [76642.0, None],
         }
 
         result = None
         if self.rrd is not None:
             result = self.rrd.fetchData("DS")
 
-        self.assertEqual(result, answer[self.arch], "fetchData() does not work")
+        self.assertEqual(result, answer, "fetchData() does not work")
 
     def test_graph(self):
         '''Génération d'un graphe à partir des données de métrologie.'''
@@ -122,14 +115,15 @@ class RRDclass(unittest.TestCase):
                 # Comparaison du graphe généré avec le graphe de référence.
                 result = filecmp.cmp(tmpfile, graphfile)
         shutil.rmtree(tmpdir)
-        self.assertEqual(result, True, "The generated graph is different")
+        self.assertEqual(result, True, "The generated graph is different (%s vs. %s)" % (tmpfile, graphfile))
 
     def test_getLastValue(self):
         '''Récupération de la dernière valeur de métrologie dans un RRD.'''
         result = None
         if self.rrd is not None:
             result = self.rrd.getLastValue()
-        self.assertEqual(result, None, "getLastValue() does not work")
+        answer = 254241.38667000001
+        self.assertEqual(result, answer, "getLastValue() does not work")
 
     def test_exportCSV(self):
         '''Export des données au format CSV.'''
