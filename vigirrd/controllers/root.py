@@ -140,8 +140,7 @@ class RootController(BaseController):
             image.close()
             return result.getvalue()
         else:
-            imgurl = os.path.join(config.get("image_cache_url", "/"),
-                                   os.path.basename(image_file))
+            imgurl = "/%s" % os.path.basename(image_file)
             return {"host": kwargs["host"],
                     "imgurl": url(imgurl),
                     "template": kwargs["graphtemplate"],
@@ -209,4 +208,3 @@ class RootController(BaseController):
         response.headers['Content-Disposition'] = \
                         'attachment;filename="%s"' % filename
         return rrd.exportCSV(host, graphtemplate, ds, start, end)
-
