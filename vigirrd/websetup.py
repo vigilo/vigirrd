@@ -15,8 +15,6 @@ log = logging.getLogger(__name__)
 def setup_app(command, conf, variables):
     """Place any commands to setup vigirrd here"""
     from vigilo.turbogears import populate_db
-    from vigirrd.config.environment import load_environment
 
     load_environment(conf.global_conf, conf.local_conf)
     populate_db()
-
