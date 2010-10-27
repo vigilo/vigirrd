@@ -659,6 +659,10 @@ class RRD(object):
                 selected_locale)
             # D'après plusieurs posts sur internet, rrdtool
             # ne fonctionne qu'avec les locales utilisant UTF-8.
+            # De plus, LC_ALL a la priorité sur LC_TIME,
+            # il faut donc s'en débarrasser.
+            if 'LC_ALL' in os.environ:
+                del os.environ['LC_ALL']
             os.environ['LC_TIME'] = selected_locale
         rrdtool.graph(*a)
 
