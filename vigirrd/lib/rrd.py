@@ -36,12 +36,14 @@ import sys
 import tempfile
 import urllib
 import csv
+import locale
 from cStringIO import StringIO
 from logging import getLogger
 LOGGER = getLogger(__name__)
 
 from tg import config, request
 from pylons.i18n import ugettext as _, lazy_ugettext as l_
+from paste.deploy.converters import asbool
 
 from vigirrd.lib import conffile
 
@@ -222,7 +224,30 @@ def exportCSV(server, graphtemplate, ds, start, end):
     # L'horodatage arrive toujours en premier. Ensuite, les valeurs
     # arrivent dans l'ordre des indicateurs donnés dans ds_list.
     result = []
-    format = config.get('csv_date_format')
+    format_date = config.get('csv_date_format')
+    format_value = asbool(config.get('csv_respect_locale', False))
+
+    # Au cas où la configuration serait changée dynamiquement.
+    if not format_value:
+        locale.setlocale(locale.LC_NUMERIC, 'C')
+        locale.setlocale(locale.LC_TIME, 'C')
+    else:
+        try:
+            lang = request.accept_language.best_matches()
+        except TypeError:
+            # Lorsque le thread n'a pas de "request" associée
+            # (ex: dans les tests unitaires), TypeError est levée.
+            lang = None
+
+        if lang:
+            selected_locale = lang[0].replace('-', '_')
+            LOGGER.debug(u"Preparing to format CSV values, using locale %s" %
+                selected_locale)
+            # Pour le formattage des nombres.
+            locale.setlocale(locale.LC_NUMERIC, selected_locale)
+            # Pour le formattage des dates/heures.
+            locale.setlocale(locale.LC_TIME, selected_locale)
+
     for ds in ds_list:
         tmp_rrd = RRD(filename=ds_map[ds], server=server)
         # Récupère les données de l'indicateur sous la forme suivante :
@@ -241,13 +266,22 @@ def exportCSV(server, graphtemplate, ds, start, end):
                 # Le timestamp est ajouté, une première fois pour trier
                 # les valeurs ensuite, une seconde fois (potentiellement
                 # formatté) selon le choix de l'administrateur.
-                if format is None:
+                if format_date is None:
                     result.append([timestamp, timestamp])
                 else:
                     date = datetime.datetime.utcfromtimestamp(timestamp
-                        ).strftime(format.encode('utf8')).decode('utf8')
+                        ).strftime(format_date.encode('utf8')).decode('utf8')
                     result.append([timestamp, date])
-            result[index].append(values_ind[timestamp][0])
+
+            # On prépare le format adéquat en fonction du type de la valeur.
+            # Le formattage tiendra compte de la locale.
+            # Exemples pour le français :
+            #   int(1234) -> "1 234"
+            #   float(1234.56) -> "1234,56"
+            format_for_value = isinstance(values_ind[timestamp][0], int) and \
+                '%d' or '%f'
+            result[index].append(locale.format(
+                format_for_value, values_ind[timestamp][0]))
 
     # On trie les valeurs par timestamp ascendant
     # et on supprime la 1ère valeur de chaque entrée
