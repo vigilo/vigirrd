@@ -280,8 +280,10 @@ def exportCSV(server, graphtemplate, ds, start, end):
             #   float(1234.56) -> "1234,56"
             format_for_value = isinstance(values_ind[timestamp][0], int) and \
                 '%d' or '%f'
-            result[index].append(locale.format(
-                format_for_value, values_ind[timestamp][0]))
+            value = (values_ind[timestamp][0] is not None) and \
+                locale.format(format_for_value, values_ind[timestamp][0]) or \
+                None
+            result[index].append(value)
 
     # On trie les valeurs par timestamp ascendant
     # et on supprime la 1ère valeur de chaque entrée
