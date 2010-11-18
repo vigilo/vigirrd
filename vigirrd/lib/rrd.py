@@ -237,16 +237,21 @@ def exportCSV(server, graphtemplate, ds, start, end):
         except TypeError:
             # Lorsque le thread n'a pas de "request" associée
             # (ex: dans les tests unitaires), TypeError est levée.
-            lang = None
+            lang = []
 
-        if lang:
-            selected_locale = lang[0].replace('-', '_')
-            LOGGER.debug(u"Preparing to format CSV values, using locale %s" %
-                selected_locale)
-            # Pour le formattage des nombres.
-            locale.setlocale(locale.LC_NUMERIC, selected_locale)
-            # Pour le formattage des dates/heures.
-            locale.setlocale(locale.LC_TIME, selected_locale)
+        for tentative_lang in lang:
+            try:
+                tentative_lang = tentative_lang.replace('-', '_')
+                # Pour le formattage des nombres.
+                locale.setlocale(locale.LC_NUMERIC, tentative_lang)
+                # Pour le formattage des dates/heures.
+                locale.setlocale(locale.LC_TIME, tentative_lang)
+            except locale.Error:
+                pass
+            else:
+                LOGGER.debug(u"Preparing to format CSV values, "
+                            "using locale %r" % selected_locale)
+                break
 
     for ds in ds_list:
         tmp_rrd = RRD(filename=ds_map[ds], server=server)
