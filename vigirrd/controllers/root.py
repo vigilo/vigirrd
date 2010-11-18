@@ -84,8 +84,10 @@ class RootController(BaseController):
             value = rrd.getStartTime(str(host))
         except rrd.RRDError:
             value = 0
-        return {"starttime": value,
-                "host": host}
+        return {
+            "starttime": value,
+            "host": host
+        }
 
     @expose("servers.html")
     def servers(self):

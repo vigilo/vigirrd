@@ -204,7 +204,7 @@ def exportCSV(server, graphtemplate, ds, start, end):
     if not ds or ds.lower() == "all":
         ds_list = all_ds
     elif isinstance(ds, basestring):
-        ds_list = [ds,]
+        ds_list = [ds]
 
     template = conffile.templates[graphcfg["graphes"][graphtemplate] \
         ["template"]]
@@ -250,7 +250,7 @@ def exportCSV(server, graphtemplate, ds, start, end):
                 pass
             else:
                 LOGGER.debug(u"Preparing to format CSV values, "
-                            "using locale %r" % selected_locale)
+                            "using locale %r" % tentative_lang)
                 break
 
     for ds in ds_list:
