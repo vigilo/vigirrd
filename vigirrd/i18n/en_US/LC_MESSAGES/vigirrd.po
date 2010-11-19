@@ -7,8 +7,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: vigirrd 2.0.0\n"
 "Report-Msgid-Bugs-To: contact@projet-vigilo.org\n"
-"POT-Creation-Date: 2010-05-12 11:49+0200\n"
-"PO-Revision-Date: 2010-09-23 18:43+0200\n"
+"POT-Creation-Date: 2010-11-19 14:40+0100\n"
+"PO-Revision-Date: 2010-11-19 14:40+0100\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: en <LL@li.org>\n"
 "Plural-Forms: nplurals=2; plural=(n != 1)\n"
@@ -17,7 +17,7 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Generated-By: Babel 0.9.4\n"
 
-#: vigirrd/lib/rrd.py:535
+#: vigirrd/lib/rrd.py:590
 msgid "value"
 msgstr "value"
 
@@ -45,9 +45,8 @@ msgid "Back to servers list"
 msgstr "Back to servers list"
 
 #: vigirrd/templates/graph.html:16
-#, fuzzy
 msgid "Back to graphs list"
-msgstr "Back to servers list"
+msgstr "Back to graphs list"
 
 #: vigirrd/templates/graphs.html:13
 msgid "Please choose one of these graphs:"
