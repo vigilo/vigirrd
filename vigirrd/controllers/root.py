@@ -109,13 +109,19 @@ class RootController(BaseController):
 
     @expose("graph.html", content_type=CUSTOM_CONTENT_TYPE)
     def graph(self, **kwargs):
-        details = True
-        if "details" in kwargs and not kwargs["details"]:
-            details = False
-        if "duration" not in kwargs:
-            kwargs["duration"] = 86400
-        duration = int(kwargs["duration"])
-        start = int(kwargs["start"])
+        # Par défaut, la légende est affichée.
+        # Passer details=0 pour la désactiver.
+        try:
+            details = bool(int(kwargs.get('details', 1)))
+        except ValueError:
+            details = True
+
+        # La durée par défaut est de 86400 (1 journée).
+        duration = int(kwargs.get("duration", 86400))
+
+        # Par défaut, on prend la dernière tranche horaire.
+        start = int(kwargs.get("start", time.time() - duration))
+
         filename = "%s_%s_%s_%s_%d.png" % (kwargs["host"],
                                            re.sub(r"[^\w]", "",
                                                 kwargs["graphtemplate"]),
