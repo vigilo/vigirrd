@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 import os
-import platform
 import unittest
 import tempfile
 import shutil
@@ -8,51 +7,26 @@ import filecmp
 from pprint import pprint
 
 import tg
-from paste.deploy import loadapp
-from webtest import TestApp
-
 from vigirrd.lib import rrd, conffile
+from vigirrd.tests import TestController
 
-
-class RRDclass(unittest.TestCase):
+class TestRRDclass(TestController):
     """Test the module-level functions in RRDGraph"""
 
-    application_under_test = 'main_without_authn'
-
-    def __init__(self, *args, **kwargs):
-        """Initialisation"""
-        super(RRDclass, self).__init__(*args, **kwargs)
-
-        # indicateur architecture
-        self.a64 = (platform.machine() != 'i686')
-
-        # repertoire pour donnees selon architecture
-        self.dir_a = "."
-        if self.a64:
-            self.arch = "64"
-        else:
-            self.arch = "32"
-
     def setUp(self):
-        """Call before every test case."""
+        """Called before every test case."""
         # Loading the application:
-        conf_dir = tg.config.here
-        wsgiapp = loadapp('config:test.ini#%s' % self.application_under_test,
-                          relative_to=conf_dir)
-        self.app = TestApp(wsgiapp)
-        # Setting it up:
-        test_file = os.path.join(conf_dir, 'test.ini')
+        super(TestRRDclass, self).setUp()
+
         # spécifique VigiRRD
         conffile.reload()
-        rrd_base = os.path.join(tg.config.get("rrd_base"), "rrd%s" % self.arch)
-        tg.config["rrd_base"] = rrd_base
         filename = "sysUpTime.rrd"
-        rrdfilename = os.path.join(rrd_base, "testserver", filename)
+        rrdfilename = os.path.join(tg.config['rrd_base'], "testserver", filename)
         self.rrd = rrd.RRD(rrdfilename, "testserver")
 
     def tearDown(self):
-        """Call after every test case."""
-        pass
+        """Called after every test case."""
+        super(TestRRDclass, self).tearDown()
 
     def test_getstep(self):
         '''Récupération du pas dans les données de métrologie.'''

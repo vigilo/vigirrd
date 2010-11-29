@@ -14,7 +14,7 @@ log = logging.getLogger(__name__)
 
 def setup_app(command, conf, variables):
     """Place any commands to setup vigirrd here"""
-    from vigilo.turbogears import populate_db
-
     load_environment(conf.global_conf, conf.local_conf)
-    populate_db()
+
+    # VigiRRD n'utilise pas la base de données.
+    # Inutile de faire appel à vigilo.turbogears ou vigilo.models donc.
