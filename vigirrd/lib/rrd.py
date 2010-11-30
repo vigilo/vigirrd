@@ -78,14 +78,10 @@ def listFiles(host):
     List the relevant RRD files for the specified host during the \
     specified time
     """
-    host_dirs = os.listdir(config.get("rrd_base"))
-    host_dirs.sort()
-
     files = []
-    for host_dir in host_dirs:
-        rrd_pattern = config.get("rrd_base") + "/" + host_dir + "/*.rrd"
-        LOGGER.debug(rrd_pattern)
-        files.extend(glob.glob(rrd_pattern))
+    rrd_pattern = os.path.join(config['rrd_base'], host, '*.rrd')
+    LOGGER.debug(rrd_pattern)
+    files.extend(glob.glob(rrd_pattern))
     files.sort()
     return files
 
@@ -363,7 +359,7 @@ class RRD(object):
         if server is not None:
             self.cfg = conffile.hosts[server]
 
-    def getGraphes(self):
+    def getGraphs(self):
         """Gets templated graphes"""
         return self.cfg["graphes"]
 

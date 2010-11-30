@@ -50,33 +50,34 @@ class RootController(BaseController):
             LOGGER.error("No configuration yet")
             raise HTTPServiceUnavailable("No configuration yet")
         if "host" not in kwargs:
-            redirect('/servers')
-            return
+            return redirect('/servers')
+
         host = kwargs["host"]
         if "graphtemplate" not in kwargs:
-            redirect('/graphs?host=%s' % host)
-            return
+            return redirect('/graphs?host=%s' % host)
+
         if "start" in kwargs:
             start = int(kwargs["start"])
         else:
             start = int(time.time()) - 86400 # Par défaut: 24 heures avant
+
         details = "1"
         if "details" in kwargs and kwargs["details"] == "0":
             details = ""
         duration = int(kwargs.get('duration', 86400))
-        qs = "host=%s&graphtemplate=%s&start=%d&duration=%s&details=%s" % (
-            kwargs["host"],
-            kwargs["graphtemplate"],
-            start,
-            duration,
-            details,
-        )
+
         if "direct" in kwargs and kwargs["direct"]:
-            redirect('/graph.png?%s' % qs)
-            return
+            format = "png"
         else:
-            redirect('/graph.html?%s' % qs)
-            return
+            format = "html"
+
+        redirect('/graph.%s' % format, {
+            'host_': kwargs['host'],
+            'graphtemplate': kwargs['graphtemplate'],
+            'start': start,
+            'duration': duration,
+            'details': details,
+        })
 
     @expose("json")
     def starttime(self, host, nocache=None):
@@ -101,11 +102,10 @@ class RootController(BaseController):
         conffile.reload()
         graphtemplates = conffile.hosts[host]["graphes"].keys()
         graphtemplates.sort()
-        if pylons.request.response_type == 'application/json':
-            return graphtemplates
-        return {"host": host,
-                "graphs": graphtemplates,
-               }
+        return {
+            "host": host,
+            "graphs": graphtemplates,
+       }
 
     @expose("graph.html", content_type=CUSTOM_CONTENT_TYPE)
     def graph(self, **kwargs):
@@ -157,7 +157,7 @@ class RootController(BaseController):
     @expose("json")
     def lastvalue(self, host, ds, nocache=None):
         conffile.reload()
-        server = conffile.hosts[host]
+        server = conffile.hosts.get(host)
         if not server:
             raise HTTPInternalServerError('Host definition is empty')
         filename = rrd.getEncodedFileName(host, ds)
