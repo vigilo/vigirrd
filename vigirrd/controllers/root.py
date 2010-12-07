@@ -116,11 +116,20 @@ class RootController(BaseController):
         except ValueError:
             details = True
 
-        # La durée par défaut est de 86400 (1 journée).
+        # La durée par défaut est de 86400 secondes (1 journée).
         duration = int(kwargs.get("duration", 86400))
+        # Si la durée est 0, vigirrd.lib.rrd utilise la date courante
+        # comme date de fin. Si les machines ne sont pas synchronisées,
+        # ceci provoque une erreur dans RRDtool (date début > date fin).
+        if duration < 1:
+            duration = 1
 
         # Par défaut, on prend la dernière tranche horaire.
         start = int(kwargs.get("start", time.time() - duration))
+        # Dans le cas où la date se situe avant l'Epoch, on borne.
+        # RRDtool rejetterait une telle date de toutes façons.
+        if start < 0:
+            start = 0
 
         filename = "%s_%s_%s_%s_%d.png" % (kwargs["host"],
                                            re.sub(r"[^\w]", "",
