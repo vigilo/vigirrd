@@ -31,7 +31,8 @@ Requires:   python-addons
 Requires:   python-babel
 Requires:   python-beaker
 Requires:   python-bytecodeassembler
-Requires:   python-configobj
+# version >= 4.7.2 pour résolution BUG #313
+Requires:   python-configobj >= 4.7.2
 Requires:   python-decorator
 Requires:   python-decoratortools
 Requires:   python-EggTranslations
