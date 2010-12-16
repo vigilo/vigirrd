@@ -21,6 +21,7 @@ License:    GPLv2
 Buildarch:  noarch
 
 BuildRequires:   python26-distribute
+BuildRequires:   python26-babel
 
 Requires:   python26-distribute
 Requires:   vigilo-turbogears
@@ -56,6 +57,7 @@ with VigiRRD.
 sed -i -e '/<IfModule mod_wsgi\.c>/a WSGISocketPrefix run/wsgi' deployment/%{module}.conf
 
 %build
+make PYTHON=%{__python} SYSCONFDIR=%{_sysconfdir}
 
 %install
 rm -rf $RPM_BUILD_ROOT

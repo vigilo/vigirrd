@@ -14,6 +14,7 @@ BuildRoot:  %{_tmppath}/%{name}-%{version}-%{release}-build
 License:    GPLv2
 
 BuildRequires:   python-setuptools
+BuildRequires:   python-babel
 
 Requires:   python >= 2.5
 Requires:   python-setuptools
@@ -115,6 +116,7 @@ with VigiRRD.
 %setup -q -n %{module}-%{version}
 
 %build
+make PYTHON=%{_bindir}/python SYSCONFDIR=%{_sysconfdir}
 
 %install
 rm -rf $RPM_BUILD_ROOT
