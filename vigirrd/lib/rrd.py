@@ -584,10 +584,18 @@ class RRD(object):
         # Curve smoothing
         a.append("-E")
 
+        # Calcul du label le plus long
+        labels = []
+        for d in ds_list:
+            if conffile.labels.has_key(d):
+                label = conffile.labels[d]
+            else:
+                label = d
+            labels.append(len(label))
+        justify = max(labels)
+
         # Tabs (legend)
-        # the number is arbitrary (to help alignment),
-        # no label should be longer than this value
-        s = "COMMENT:%s" % _("value").ljust(21)
+        s = "COMMENT:%s" % _("value").ljust(justify+3)
         for tab in template["tabs"]:
             # if we have a nicer label, use it
             if conffile.labels.has_key(tab):
@@ -595,7 +603,7 @@ class RRD(object):
             else:
                 # if we dont, too bad, just print it.
                 tabstr = tab
-            s += tabstr.center(9) # align it
+            s += tabstr.strip().center(7) # align it
 
         a.append(str(s)+"\\n")
 
@@ -605,7 +613,7 @@ class RRD(object):
                 is_max = True
             else:
                 is_max = False
-            a.extend(self.get_graph_cmd_for_ds(d, i, template, is_max))
+            a.extend(self.get_graph_cmd_for_ds(d, i, template, is_max, justify))
 
         # rrdtool.graph() ne sait manipuler que le type <str>.
         a = [str(e) for e in a]
@@ -631,7 +639,7 @@ class RRD(object):
             os.environ['LC_TIME'] = selected_locale
         rrdtool.graph(*a)
 
-    def get_graph_cmd_for_ds(self, d, i, template, is_max=False):
+    def get_graph_cmd_for_ds(self, d, i, template, is_max=False, justify=18):
         cmd = []
 
         if is_max:
@@ -674,7 +682,7 @@ class RRD(object):
         cmd.append("CDEF:%s=%s_orig,%1.10f,*" % (i, i, factor))
 
         graphline = "%s:%s%s:%s" % (params["type"], i, params["color"], \
-            label.ljust(18))
+            label.ljust(justify))
 #            LOGGER.debug("params=%s, has_key=%d" %
 #                (params, params.has_key("stack")))
         if params.has_key("stack") and params["stack"]:
@@ -682,10 +690,11 @@ class RRD(object):
 #                LOGGER.debug("added + :STACK to %s"%graphline)
         cmd.append(graphline)
         if is_max:
-            cmd.append("GPRINT:%s:AVERAGE:%s" % (i, "%4.0lf %s "))
+            cmd.append("GPRINT:%s:LAST:%s\\n" % (i, "%4.0lf%s"))
         else:
             for tab in template["tabs"]:
-                cmd.append("GPRINT:%s:%s:%s" % (i, tab, "%4.0lf %s "))
+                cmd.append("GPRINT:%s:%s:%s" % (i, tab, "%4.0lf%s"))
+            cmd[-1] = cmd[-1] + "\\n"
         return cmd
 
     def getLastValue(self):

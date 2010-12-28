@@ -113,5 +113,13 @@ templates["nagios-states-services"] = {
     ],
 }
 
+templates["nagios-check-types"] = {
+    "tabs": [ 'AVERAGE', 'MIN', 'MAX', 'LAST'],
+    "draw": [
+        { "type": "AREA", "color": "#FF5500", "stack": False }, # on-demand
+        { "type": "AREA", "color": "#FF9900", "stack": True }, # scheduled
+        { "type": "LINE2", "color": "#5DB460", "stack": False }, # cached
+    ],
+}
 
 # vim:set tabstop=4 shiftwidth=4 expandtab:
