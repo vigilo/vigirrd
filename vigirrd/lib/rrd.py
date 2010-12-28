@@ -137,7 +137,10 @@ def showMergedRRDs(server, template_name, outfile='-',
     template["name"] = template_name
     template["vlabel"] = graphcfg["graphes"][template_name]["vlabel"]
     template["factors"] = graphcfg["graphes"][template_name]["factors"]
-    template["last_is_max"] = graphcfg["graphes"][template_name]["last_is_max"]
+    if "last_is_max" in graphcfg["graphes"][template_name]:
+        template["last_is_max"] = graphcfg["graphes"][template_name]["last_is_max"]
+    else:
+        template["last_is_max"] = False
     ds_list = graphcfg["graphes"][template_name]["ds"]
     ds_map = {}
     for ds in ds_list:
@@ -597,7 +600,8 @@ class RRD(object):
         a.append(str(s)+"\\n")
 
         for i, d in enumerate(ds_list):
-            if template["last_is_max"] and i == len(ds_list)-1:
+            if "last_is_max" in template and template["last_is_max"] \
+                    and i == len(ds_list)-1:
                 is_max = True
             else:
                 is_max = False
