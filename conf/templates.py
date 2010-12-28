@@ -94,5 +94,24 @@ templates["dual"] = {
     ],
 }
 
+templates["nagios-states-hosts"] = {
+    "tabs": [ 'AVERAGE', 'MIN', 'MAX', 'LAST'],
+    "draw": [
+        { "type": "AREA", "color": "#AAAAAA", "stack": True }, # UNREACHABLE
+        { "type": "AREA", "color": "#FF0000", "stack": True }, # DOWN
+        { "type": "AREA", "color": "#73DE78", "stack": True }, # UP
+    ],
+}
+
+templates["nagios-states-services"] = {
+    "tabs": [ 'AVERAGE', 'MIN', 'MAX', 'LAST'],
+    "draw": [
+        { "type": "AREA", "color": "#AAAAAA", "stack": True }, # UNKNOWN
+        { "type": "AREA", "color": "#FF0000", "stack": True }, # CRITICAL
+        { "type": "AREA", "color": "#FFFF00", "stack": True }, # WARNING
+        { "type": "AREA", "color": "#73DE78", "stack": True }, # OK
+    ],
+}
+
 
 # vim:set tabstop=4 shiftwidth=4 expandtab:

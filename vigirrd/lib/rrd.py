@@ -137,6 +137,7 @@ def showMergedRRDs(server, template_name, outfile='-',
     template["name"] = template_name
     template["vlabel"] = graphcfg["graphes"][template_name]["vlabel"]
     template["factors"] = graphcfg["graphes"][template_name]["factors"]
+    template["last_is_max"] = graphcfg["graphes"][template_name]["last_is_max"]
     ds_list = graphcfg["graphes"][template_name]["ds"]
     ds_map = {}
     for ds in ds_list:
@@ -595,55 +596,12 @@ class RRD(object):
 
         a.append(str(s)+"\\n")
 
-        for i in range(len(ds_list)):
-            d = ds_list[i]
-
-            # If we know how to graph the n-th DS...
-            if i < len(template["draw"]):
-                # ...use those params...
-                params = template["draw"][i]
+        for i, d in enumerate(ds_list):
+            if template["last_is_max"] and i == len(ds_list)-1:
+                is_max = True
             else:
-                # ...else just use the first params.
-                params = template["draw"][0]
-            # If we have a nicer label, use it
-            if conffile.labels.has_key(d):
-                label = conffile.labels[d]
-            else:
-                label = d
-
-            # Find the required factor
-            factor = 1
-            if params.has_key("invert") and params["invert"]:
-                factor = -1
-            if template["factors"].has_key(d):
-                factor = template["factors"][d]
-
-            if type(self.filename) == type( {} ):
-                rrdfile = self.filename[d]
-                dsname = "DS"
-            else:
-                rrdfile = self.filename
-                dsname = d
-            if not os.path.exists(rrdfile):
-                raise RRDNotFoundError(rrdfile)
-
-            # Génère un indicateur consolidé "<ds>_orig" correspondant
-            # à la valeur moyenne sur la période et le pas considérés.
-            a.append("DEF:%s_orig=%s:%s:AVERAGE" % (i, rrdfile, dsname))
-            # Remplace l'indicateur "<ds>" par la valeur de "<ds>_orig"
-            # généré précédemment, en lui appliquant le facteur approprié.
-            a.append("CDEF:%s=%s_orig,%1.10f,*" % (i, i, factor))
-
-            graphline = "%s:%s%s:%s" % (params["type"], i, params["color"], \
-                label.ljust(18))
-#            LOGGER.debug("params=%s, has_key=%d" %
-#                (params, params.has_key("stack")))
-            if params.has_key("stack") and params["stack"]:
-                graphline += ":STACK"
-#                LOGGER.debug("added + :STACK to %s"%graphline)
-            a.append(graphline)
-            for tab in template["tabs"]:
-                a.append("GPRINT:%s:%s:%s" % (i, tab, "%4.0lf %s "))
+                is_max = False
+            a.extend(self.get_graph_cmd_for_ds(d, i, template, is_max))
 
         # rrdtool.graph() ne sait manipuler que le type <str>.
         a = [str(e) for e in a]
@@ -669,6 +627,62 @@ class RRD(object):
             os.environ['LC_TIME'] = selected_locale
         rrdtool.graph(*a)
 
+    def get_graph_cmd_for_ds(self, d, i, template, is_max=False):
+        cmd = []
+
+        if is_max:
+            # C'est le max, on fait juste un trait noir
+            params = { "type": "LINE1", "color": "#000000", "stack": False }
+        else:
+            # If we know how to graph the n-th DS...
+            if i < len(template["draw"]):
+                # ...use those params...
+                params = template["draw"][i]
+            else:
+                # ...else just use the first params.
+                params = template["draw"][0]
+        # If we have a nicer label, use it
+        if conffile.labels.has_key(d):
+            label = conffile.labels[d]
+        else:
+            label = d
+        # Find the required factor
+        factor = 1
+        if params.has_key("invert") and params["invert"]:
+            factor = -1
+        if template["factors"].has_key(d):
+            factor = template["factors"][d]
+
+        if isinstance(self.filename, dict):
+            rrdfile = self.filename[d]
+            dsname = "DS"
+        else:
+            rrdfile = self.filename
+            dsname = d
+        if not os.path.exists(rrdfile):
+            raise RRDNotFoundError(rrdfile)
+
+        # Génère un indicateur consolidé "<ds>_orig" correspondant
+        # à la valeur moyenne sur la période et le pas considérés.
+        cmd.append("DEF:%s_orig=%s:%s:AVERAGE" % (i, rrdfile, dsname))
+        # Remplace l'indicateur "<ds>" par la valeur de "<ds>_orig"
+        # généré précédemment, en lui appliquant le facteur approprié.
+        cmd.append("CDEF:%s=%s_orig,%1.10f,*" % (i, i, factor))
+
+        graphline = "%s:%s%s:%s" % (params["type"], i, params["color"], \
+            label.ljust(18))
+#            LOGGER.debug("params=%s, has_key=%d" %
+#                (params, params.has_key("stack")))
+        if params.has_key("stack") and params["stack"]:
+            graphline += ":STACK"
+#                LOGGER.debug("added + :STACK to %s"%graphline)
+        cmd.append(graphline)
+        if is_max:
+            cmd.append("GPRINT:%s:AVERAGE:%s" % (i, "%4.0lf %s "))
+        else:
+            for tab in template["tabs"]:
+                cmd.append("GPRINT:%s:%s:%s" % (i, tab, "%4.0lf %s "))
+        return cmd
 
     def getLastValue(self):
         """
