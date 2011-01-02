@@ -100,6 +100,7 @@ templates["nagios-states-hosts"] = {
         { "type": "AREA", "color": "#AAAAAA", "stack": True }, # UNREACHABLE
         { "type": "AREA", "color": "#FF0000", "stack": True }, # DOWN
         { "type": "AREA", "color": "#73DE78", "stack": True }, # UP
+        { "type": "LINE1", "color": "#000000", "stack": False }, # total
     ],
 }
 
@@ -110,6 +111,7 @@ templates["nagios-states-services"] = {
         { "type": "AREA", "color": "#FF0000", "stack": True }, # CRITICAL
         { "type": "AREA", "color": "#FFFF00", "stack": True }, # WARNING
         { "type": "AREA", "color": "#73DE78", "stack": True }, # OK
+        { "type": "LINE1", "color": "#000000", "stack": False }, # total
     ],
 }
 
@@ -119,7 +121,9 @@ templates["nagios-check-types"] = {
         { "type": "AREA", "color": "#FF5500", "stack": False }, # on-demand
         { "type": "AREA", "color": "#FF9900", "stack": True }, # scheduled
         { "type": "LINE2", "color": "#5DB460", "stack": False }, # cached
+        { "type": "LINE1", "color": "#000000", "stack": False }, # total
     ],
 }
+
 
 # vim:set tabstop=4 shiftwidth=4 expandtab:
