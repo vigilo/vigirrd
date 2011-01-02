@@ -38,6 +38,8 @@ import urllib
 import csv
 import locale
 from cStringIO import StringIO
+import hashlib
+
 from logging import getLogger
 LOGGER = getLogger(__name__)
 
@@ -46,6 +48,8 @@ from pylons.i18n import ugettext as _, lazy_ugettext as l_
 from paste.deploy.converters import asbool
 
 from vigirrd.lib import conffile
+
+_DIR_HASHES = {}
 
 def dateToDateObj(date):
     """
@@ -73,13 +77,27 @@ def dateToTimestamp(date):
     """
     return time.mktime(dateToDateObj(date).timetuple())
 
+def getHostPath(hostname):
+    path_mode = config.get("rrd_path_mode", "flat")
+    subpath = ""
+    if path_mode == "name" and len(hostname) >= 2:
+        subpath = os.path.join(hostname[0], "".join(hostname[0:2]))
+    elif path_mode == "hash":
+        if hostname in _DIR_HASHES:
+            subpath = _DIR_HASHES[hostname]
+        else:
+            hash = hashlib.md5(hostname).hexdigest()
+            subpath = os.path.join(hash[0], "".join(hash[0:2]))
+            _DIR_HASHES[hostname] = subpath
+    return os.path.join(config['rrd_base'], subpath, hostname)
+
 def listFiles(host):
     """
     List the relevant RRD files for the specified host during the \
     specified time
     """
     files = []
-    rrd_pattern = os.path.join(config['rrd_base'], host, '*.rrd')
+    rrd_pattern = os.path.join(getHostPath(host), '*.rrd')
     LOGGER.debug(rrd_pattern)
     files.extend(glob.glob(rrd_pattern))
     files.sort()
@@ -166,7 +184,7 @@ def getEncodedFileName(server, ds):
     @rtype: C{str}
     """
     ds_encoded = urllib.quote_plus(ds).strip()
-    filename = "%s/%s/%s.rrd" % (config.get("rrd_base"), server, ds_encoded)
+    filename = "%s/%s.rrd" % (getHostPath(server), ds_encoded)
     return filename
 
 # VIGILO_EXIG_VIGILO_PERF_0040:Export des donnees d'un graphe au format CSV
