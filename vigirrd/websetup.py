@@ -16,5 +16,9 @@ def setup_app(command, conf, variables):
     """Place any commands to setup vigirrd here"""
     load_environment(conf.global_conf, conf.local_conf)
 
-    # VigiRRD n'utilise pas la base de données.
-    # Inutile de faire appel à vigilo.turbogears ou vigilo.models donc.
+    # Load the models
+    from vigirrd import model
+    print "Creating tables"
+    model.metadata.create_all(bind=config['pylons.app_globals'].sa_engine)
+    transaction.commit()
+    print "Successfully setup"

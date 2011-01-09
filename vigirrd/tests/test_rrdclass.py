@@ -7,6 +7,7 @@ import filecmp
 from pprint import pprint
 
 import tg
+from vigirrd import model
 from vigirrd.lib import rrd, conffile
 from vigirrd.tests import TestController
 
@@ -20,8 +21,9 @@ class TestRRDclass(TestController):
 
         # spécifique VigiRRD
         conffile.reload()
-        filename = "sysUpTime.rrd"
-        rrdfilename = os.path.join(tg.config['rrd_base'], "testserver", filename)
+        dsname = "sysUpTime"
+        rrdfilename = os.path.join(tg.config['rrd_base'], "testserver",
+                                   "%s.rrd" % dsname)
         self.rrd = rrd.RRD(rrdfilename, "testserver")
 
     def tearDown(self):
@@ -86,7 +88,9 @@ class TestRRDclass(TestController):
             # doit avoir été chargée correctement.
             self.assertTrue(self.rrd is not None)
 
-            self.rrd.graph(conffile.templates["lines"], ["DS"], format="SVG",
+            #print [pds.name for pds in model.DBSession.query(model.PerfDataSource).all()]
+            ds = model.PerfDataSource.by_name("sysUpTime")
+            self.rrd.graph(conffile.templates["lines"], [ds, ], format="SVG",
                 outfile=tmpfile, start=start, duration=duration)
 
             # L'ancien test vérifiait le contenu du graphe généré,

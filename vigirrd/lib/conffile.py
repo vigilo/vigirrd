@@ -19,7 +19,6 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 ################################################################################
-# $Id$
 
 """
 Configuration for RRDGraph basée sur des fichiers de conf.
@@ -36,9 +35,10 @@ LOGGER = getLogger(__name__)
 
 from tg import config
 
-ALLOWED_KEYS = ("hostscfg", "templates", "labels")
+ALLOWED_KEYS = ("templates", )
+MTIMES = {}
 
-__all__ = ("reload", "hosts", "templates", "labels")
+__all__ = ("reload", "templates")
 
 
 class Settings(UserDict.DictMixin, object):
@@ -75,26 +75,39 @@ class Settings(UserDict.DictMixin, object):
         @param filename: the file path to load. Must exist and be valid python.
         @type  filename: C{str}
         """
+        LOGGER.debug("Reading %s", filename)
         settings_raw = {}
         execfile(filename, settings_raw)
         self.__dct.update(settings_raw)
 
+
 def reload():
-    global hosts, templates, labels
+    global templates
+    tpl_path = config.get("templates_file", "/etc/vigilo/vigirrd/templates.py")
+    if not os.path.exists(tpl_path):
+        LOGGER.warning("Can't find the template conf file: %s", tpl_path)
+        templates = {}
+        return
+    current_timestamp = os.stat(tpl_path).st_mtime
+    if tpl_path in MTIMES and current_timestamp <= MTIMES[tpl_path]:
+        # non modifié
+        LOGGER.debug("Not reading unchanged file %s", tpl_path)
+        return
     settings.empty()
-    files = glob.glob(os.path.join(
-                    config.get("conf_dir", "/etc/vigilo/vigirrd"), "*.py"))
-    files.sort()
-    for f in files:
-        LOGGER.debug("Trying to read file %s" % f)
-        try:
-            settings.load_file(f)
-        except Exception, e:
-            LOGGER.error("Error while parsing %s: %s\n" % (f, str(e)))
-    del files
-    hosts = settings.get("hostscfg", {})
+    settings.load_file(tpl_path)
+    MTIMES[tpl_path] = current_timestamp
     templates = settings.get("templates", {})
-    labels = settings.get("labels", {})
+    #files = glob.glob(os.path.join(
+    #                config.get("conf_dir", "/etc/vigilo/vigirrd"), "*.py"))
+    #files.sort()
+    #for f in files:
+    #    LOGGER.debug("Trying to read file %s" % f)
+    #    try:
+    #        settings.load_file(f)
+    #    except Exception, e:
+    #        LOGGER.error("Error while parsing %s: %s\n" % (f, str(e)))
+    #del files
+    #templates = settings.get("templates", {})
 
 settings = Settings()
 reload()

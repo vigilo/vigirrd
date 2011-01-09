@@ -1,7 +1,7 @@
 %define module  vigirrd
 %define name    vigilo-%{module}
 %define version 2.0.0
-%define release 1%{?svn}%{?dist}
+%define release 2%{?svn}%{?dist}
 
 Name:       %{name}
 Summary:    Web interface to display RRD files in vigilo
@@ -23,6 +23,14 @@ Requires:   python-rrdtool >= 1.3
 Requires:   python-simplejson
 Requires:   fonts-ttf-dejavu
 Requires:   apache-mod_wsgi
+
+# VigiConf
+Requires:   vigilo-vigiconf-local
+Obsoletes:  %{name}-confmgr < 1.13-2
+Provides:   %{name}-confmgr = %{version}-%{release}
+Obsoletes:  %{name}-vigiconf < 2.0.0-2
+Provides:   %{name}-vigiconf = %{version}-%{release}
+
 ######### Dependance from python dependance tree ########
 Requires:   vigilo-common
 Requires:   vigilo-models
@@ -100,17 +108,6 @@ Web interface to display RRD files
 Web interface based on mod_python to display the RRD graphs.
 This application is part of the Vigilo Project <http://vigilo-project.org>
 
-%package    vigiconf
-Summary:    Vigiconf setup for VigiRRD
-Group:      System/Servers
-Requires:   %{name}
-Requires:   vigilo-vigiconf-local
-Obsoletes:  %{name}-confmgr < 1.13-2
-Provides:   %{name}-confmgr = %{version}-%{release}
-
-%description vigiconf
-This package creates the links to use Vigiconf's generated configuration files
-with VigiRRD.
 
 %prep
 %setup -q -n %{module}-%{version}
@@ -122,14 +119,10 @@ make PYTHON=%{_bindir}/python SYSCONFDIR=%{_sysconfdir}
 rm -rf $RPM_BUILD_ROOT
 make install \
     DESTDIR=$RPM_BUILD_ROOT \
-	SYSCONFDIR=%{_sysconfdir} \
+    SYSCONFDIR=%{_sysconfdir} \
     PYTHON=%{_bindir}/python
 
 make apidoc || :
-
-# Vigiconf
-ln -s %{_sysconfdir}/vigilo/vigiconf/prod/vigirrd.conf.py \
-    $RPM_BUILD_ROOT%{_sysconfdir}/vigilo/%{module}/graphs.conf.py
 
 %find_lang %{name}
 
@@ -139,14 +132,13 @@ rm -rf $RPM_BUILD_ROOT
 
 %files -f %{name}.lang
 %defattr(644,root,root,755)
-%doc COPYING 
+%doc COPYING
 %dir %{_sysconfdir}/vigilo
 %dir %{_sysconfdir}/vigilo/%{module}
 %config(noreplace) %{_sysconfdir}/vigilo/%{module}/*.conf
 %config(noreplace) %{_sysconfdir}/vigilo/%{module}/*.py
 %config(noreplace) %{_sysconfdir}/vigilo/%{module}/*.wsgi
 %config(noreplace) %attr(640,root,apache) %{_sysconfdir}/vigilo/%{module}/*.ini
-%exclude %{_sysconfdir}/vigilo/%{module}/graphs.conf.py
 %{_sysconfdir}/vigilo/%{module}/graphs.py.dist
 %config(noreplace) %{_sysconfdir}/httpd/conf/webapps.d/*
 %config(noreplace) %{_sysconfdir}/cron.d/*
@@ -154,8 +146,4 @@ rm -rf $RPM_BUILD_ROOT
 %attr(750,apache,apache) %{_localstatedir}/log/vigilo/%{module}
 %attr(750,apache,apache) %{_localstatedir}/cache/vigilo/sessions
 %{python_sitelib}/*
-
-%files vigiconf
-%defattr(644,root,root,755)
-%{_sysconfdir}/vigilo/%{module}/graphs.conf.py
 

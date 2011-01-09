@@ -32,3 +32,4 @@ lint: lint_pylint
 tests: tests_nose
 clean: clean_python
 	rm -rf data/img
+	rm -f vigirrd.db

@@ -21,6 +21,7 @@ from vigilo.turbogears.controllers.error import ErrorController
 
 from vigirrd.lib import conffile
 from vigirrd.lib import rrd
+from vigirrd.model import DBSession, Host, Graph, PerfDataSource
 
 __all__ = ['RootController']
 
@@ -45,8 +46,7 @@ class RootController(BaseController):
     @expose()
     def index(self, **kwargs):
         """Point d'entrée principal"""
-        conffile.reload()
-        if not conffile.hosts:
+        if not DBSession.query(Host).count():
             LOGGER.error("No configuration yet")
             raise HTTPServiceUnavailable("No configuration yet")
         if "host" not in kwargs:
@@ -92,23 +92,25 @@ class RootController(BaseController):
 
     @expose("servers.html")
     def servers(self):
-        conffile.reload()
-        servers = conffile.hosts.keys()
+        servers = [ h.name for h in DBSession.query(Host.name).all() ]
         return {"servers": servers}
 
     @expose("graphs.html")
     @expose("json")
     def graphs(self, host):
-        conffile.reload()
-        graphtemplates = conffile.hosts[host]["graphes"].keys()
+        host = Host.by_name(host)
+        if not host:
+            raise HTTPNotFound()
+        graphtemplates = [ g.name for g in host.graphs ]
         graphtemplates.sort()
         return {
-            "host": host,
+            "host": host.name,
             "graphs": graphtemplates,
        }
 
     @expose("graph.html", content_type=CUSTOM_CONTENT_TYPE)
     def graph(self, **kwargs):
+        conffile.reload()
         # Par défaut, la légende est affichée.
         # Passer details=0 pour la désactiver.
         try:
@@ -165,10 +167,9 @@ class RootController(BaseController):
 
     @expose("json")
     def lastvalue(self, host, ds, nocache=None):
-        conffile.reload()
-        server = conffile.hosts.get(host)
+        server = Host.by_name(host)
         if not server:
-            raise HTTPInternalServerError('Host definition is empty')
+            raise HTTPNotFound("Unknown host: %s" % host)
         filename = rrd.getEncodedFileName(host, ds)
         if not filename or not os.path.exists(filename):
             raise HTTPNotFound('The datasource "%s" does not exist, '
@@ -209,6 +210,8 @@ class RootController(BaseController):
         now = int(time.time())
         if start >= now:
             raise HTTPNotFound('No data yet')
+        if Host.by_name(host) is None:
+            raise HTTPNotFound("No such host")
         if end is None:
             # one hour plus one second, start should be 1 sec in the past
             end = start + 3600 + 1

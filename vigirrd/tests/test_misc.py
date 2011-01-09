@@ -20,7 +20,7 @@ class TestMisc(TestController):
                 'inexistent',
                 'sysUpTime',
             ),
-            status=500,
+            status=404,
         )
 
     def test_last_value_file_not_found(self):

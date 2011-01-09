@@ -13,6 +13,9 @@ class TestExportCSV(TestController):
         conffile.reload()
         self.now = int(time.time())
 
+    def tearDown(self):
+        super(TestExportCSV, self).tearDown()
+
     def test_export_invalid_time(self):
         """Erreur 404 lors d'un export CSV pour les dates dans le futur"""
         # Date dans le futur.

@@ -50,6 +50,7 @@ from paste.deploy.converters import asbool
 from vigilo.common import get_rrd_path
 
 from vigirrd.lib import conffile
+from vigirrd.model import DBSession, Host, Graph, PerfDataSource
 
 
 def dateToDateObj(date):
@@ -129,31 +130,26 @@ def listDS(files):
     return list_l
 
 def showMergedRRDs(server, template_name, outfile='-',
-    start=0, duration=0, details=1):
+        start=0, duration=0, details=1):
     """showMergedRRDs"""
-    try:
-        graphcfg = conffile.hosts[server]
-    except KeyError:
+    host = Host.by_name(server)
+    if host is None:
         raise RRDNotFoundError, server
-    if template_name not in graphcfg["graphes"].keys():
+    graph = Graph.by_host_and_name(host, template_name)
+    if graph is None:
         LOGGER.error("ERROR: The template '%(template)s' does not exist. "
                     "Available templates: %(available)s", {
             'template': template_name,
-            'available': ", ".join(graphcfg["graphes"].keys()),
+            'available': ", ".join([g.name for g in host.graphs]),
         })
-    template = conffile.templates[graphcfg["graphes"][template_name] \
-        ["template"]]
+    template = conffile.templates[graph.template]
     template["name"] = template_name
-    template["vlabel"] = graphcfg["graphes"][template_name]["vlabel"]
-    template["factors"] = graphcfg["graphes"][template_name]["factors"]
-    if "last_is_max" in graphcfg["graphes"][template_name]:
-        template["last_is_max"] = graphcfg["graphes"][template_name]["last_is_max"]
-    else:
-        template["last_is_max"] = False
-    ds_list = graphcfg["graphes"][template_name]["ds"]
+    template["vlabel"] = graph.vlabel
+    template["last_is_max"] = graph.lastismax
     ds_map = {}
+    ds_list = graph.perfdatasources
     for ds in ds_list:
-        ds_map[ds] = getEncodedFileName(server, ds)
+        ds_map[ds.name] = getEncodedFileName(server, ds.name)
     tmp_rrd = RRD(filename=ds_map, server=server)
     tmp_rrd.graph(template, ds_list, outfile, start=start, \
                   duration=duration, details=(int(details)==1))
@@ -206,22 +202,15 @@ def exportCSV(server, graphtemplate, ds, start, end):
     """
 
     # initialisation
-    graphcfg = conffile.hosts[server]
-
-    all_ds = graphcfg["graphes"][graphtemplate]["ds"]
+    host = Host.by_name(server)
+    graph = Graph.by_host_and_name(host, graphtemplate)
 
     # Si l'indicateur est All ou n'existe pas pour cet hôte,
     # tous les indicateurs sont pris en compte.
     if not ds or ds.lower() == "all":
-        ds_list = all_ds
+        ds_list = [pds.name for pds in graph.perfdatasources]
     elif isinstance(ds, basestring):
         ds_list = [ds]
-
-    template = conffile.templates[graphcfg["graphes"][graphtemplate] \
-        ["template"]]
-    template["name"] = graphtemplate
-    template["vlabel"] = graphcfg["graphes"][graphtemplate]["vlabel"]
-    template["factors"] = graphcfg["graphes"][graphtemplate]["factors"]
 
     ds_map = {}
     for ds in ds_list:
@@ -372,11 +361,11 @@ class RRD(object):
         self.filename = filename
         self.server = server
         if server is not None:
-            self.cfg = conffile.hosts[server]
+            self.host = Host.by_name(server)
 
     def getGraphs(self):
         """Gets templated graphes"""
-        return self.cfg["graphes"]
+        return self.host.graphs
 
     def getStep(self):
         """Get step from the RRD"""
@@ -521,13 +510,13 @@ class RRD(object):
                 continue
 
     def graph(self, template, ds_list, outfile="-", format='PNG',
-        start=0, duration=0, details=True, lazy=True):
+              start=0, duration=0, details=True, lazy=True):
         if outfile != "-":
             imgdir = os.path.dirname(outfile)
             if not os.path.exists(imgdir):
                 os.makedirs(imgdir)
 
-        step = self.cfg["step"]
+        step = self.host.step
         #import pprint
         #pprint.pprint(template)
 
@@ -584,9 +573,9 @@ class RRD(object):
                 ellipsis_server = self.server
             a.append("%s: %s" % (ellipsis_server, template["name"]))
             a.append("--width")
-            a.append(self.cfg["width"])
+            a.append(self.host.width)
             a.append("--height")
-            a.append(self.cfg["height"])
+            a.append(self.host.height)
             a.append("--vertical-label")
             a.append(template["vlabel"])
             a.append("TEXTALIGN:left")
@@ -598,10 +587,9 @@ class RRD(object):
         # Calcul du label le plus long
         labels = []
         for d in ds_list:
-            if conffile.labels.has_key(d):
-                label = conffile.labels[d]
-            else:
-                label = d
+            label = d.label
+            if not label:
+                label = d.name
             labels.append(len(label))
         justify = max(labels)
 
@@ -609,8 +597,8 @@ class RRD(object):
         s = "COMMENT:%s" % _("value").ljust(justify+3)
         for tab in template["tabs"]:
             # if we have a nicer label, use it
-            if conffile.labels.has_key(tab):
-                tabstr = conffile.labels[tab]
+            if tab in config.static_labels:
+                tabstr = config.static_labels[tab]
             else:
                 # if we dont, too bad, just print it.
                 tabstr = tab
@@ -665,23 +653,21 @@ class RRD(object):
                 # ...else just use the first params.
                 params = template["draw"][0]
         # If we have a nicer label, use it
-        if conffile.labels.has_key(d):
-            label = conffile.labels[d]
-        else:
-            label = d
+        label = d.label
+        if not label:
+            label = d.name
         # Find the required factor
         factor = 1
         if params.has_key("invert") and params["invert"]:
             factor = -1
-        if template["factors"].has_key(d):
-            factor = template["factors"][d]
+        if d.factor != 1:
+            factor = factor * d.factor
 
         if isinstance(self.filename, dict):
-            rrdfile = self.filename[d]
-            dsname = "DS"
+            rrdfile = self.filename[d.name]
         else:
             rrdfile = self.filename
-            dsname = d
+        dsname = "DS"
         if not os.path.exists(rrdfile):
             raise RRDNotFoundError(rrdfile)
 

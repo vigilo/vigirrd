@@ -12,21 +12,23 @@ from paste.script.appinstall import SetupCommand
 from webtest import TestApp
 from nose.tools import eq_
 
-from vigilo.models.session import metadata, DBSession
+from vigirrd.model import metadata, DBSession
+from vigirrd.import_vigiconf import import_vigiconf
 
 __all__ = ['setup_db', 'teardown_db', 'TestController']
 
-def setup_db():
-    """Method used to build a database"""
-    print "Creating model"
-    engine = config['pylons.app_globals'].sa_engine
-    metadata.create_all(engine)
-
-def teardown_db():
-    """Method used to destroy a database"""
-    print "Destroying model"
-    engine = config['pylons.app_globals'].sa_engine
-    metadata.drop_all(engine)
+#def setup_db():
+#    """Method used to build a database"""
+#    print "Creating model"
+#    engine = config['pylons.app_globals'].sa_engine
+#    metadata.create_all(engine)
+#    import_vigiconf(config["vigiconf_file"])
+#
+#def teardown_db():
+#    """Method used to destroy a database"""
+#    print "Destroying model"
+#    engine = config['pylons.app_globals'].sa_engine
+#    metadata.drop_all(engine)
 
 class TestController(unittest.TestCase):
     """
@@ -55,18 +57,18 @@ class TestController(unittest.TestCase):
         # Charge "test32.ini" pour les archis 32 bits
         # et "test64.ini" pour les archis 64 bits.
         arch = (platform.machine() != 'i686') and '64' or '32'
-        wsgiapp = loadapp('config:test%s.ini#%s' % (
-                arch,
-                self.application_under_test
-            ),
-            relative_to=conf_dir,
-        )
+        config_file = path.join(conf_dir, 'test%s.ini' % arch)
+        wsgiapp = loadapp('config:%s#%s' % (config_file,
+                                            self.application_under_test),
+                          relative_to=conf_dir)
         self.app = TestApp(wsgiapp)
         # Setting it up:
-        test_file = path.join(conf_dir, 'test%s.ini' % arch)
         cmd = SetupCommand('setup-app')
-        cmd.run([test_file])
+        cmd.run([config_file])
+        # Import VigiConf
+        import_vigiconf(config_file)
 
     def tearDown(self):
         """Method called by nose after running each test"""
-        pass
+        engine = config['pylons.app_globals'].sa_engine
+        metadata.drop_all(engine)

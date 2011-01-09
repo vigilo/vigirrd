@@ -49,6 +49,9 @@ setup(
 
     [paste.app_install]
     main = pylons.util:PylonsInstaller
+
+    [console_scripts]
+    vigirrd-import-vigiconf = vigirrd.import_vigiconf:main
     """,
     data_files=[
         (os.path.join(sysconfdir, 'vigilo/vigirrd/'), [
