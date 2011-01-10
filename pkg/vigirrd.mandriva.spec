@@ -1,7 +1,7 @@
 %define module  vigirrd
 %define name    vigilo-%{module}
 %define version 2.0.0
-%define release 2%{?svn}%{?dist}
+%define release 1%{?svn}%{?dist}
 
 Name:       %{name}
 Summary:    Web interface to display RRD files in vigilo
@@ -133,7 +133,7 @@ rm -rf $RPM_BUILD_ROOT
 %files -f %{name}.lang
 %defattr(644,root,root,755)
 %doc COPYING
-%{_bindir}/%{module}-*
+%attr(755,root,root) %{_bindir}/%{module}-*
 %dir %{_sysconfdir}/vigilo
 %dir %{_sysconfdir}/vigilo/%{module}
 %config(noreplace) %{_sysconfdir}/vigilo/%{module}/*.conf
