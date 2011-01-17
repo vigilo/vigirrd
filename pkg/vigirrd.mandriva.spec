@@ -126,6 +126,9 @@ make apidoc || :
 
 %find_lang %{name}
 
+%post
+/sbin/service httpd condrestart > /dev/null 2>&1 || :
+
 %clean
 rm -rf $RPM_BUILD_ROOT
 
