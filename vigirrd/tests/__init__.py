@@ -13,7 +13,7 @@ from webtest import TestApp
 from nose.tools import eq_
 
 from vigirrd.model import metadata, DBSession
-from vigirrd.import_vigiconf import import_vigiconf
+from vigirrd.commandline import import_vigiconf
 
 __all__ = ['setup_db', 'teardown_db', 'TestController']
 
