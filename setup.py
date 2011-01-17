@@ -51,7 +51,8 @@ setup(
     main = pylons.util:PylonsInstaller
 
     [console_scripts]
-    vigirrd-import-vigiconf = vigirrd.import_vigiconf:main
+    vigirrd-import-vigiconf = vigirrd.commandline:import_vigiconf
+    vigirrd-cleanup-cache = vigirrd.commandline:cleanup_cache
     """,
     data_files=[
         (os.path.join(sysconfdir, 'vigilo/vigirrd/'), [

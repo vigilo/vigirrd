@@ -3,6 +3,7 @@
 
 import os
 import stat
+import time
 import logging
 logging.basicConfig(level=logging.DEBUG)
 
@@ -13,14 +14,24 @@ from paste.deploy import appconfig
 from vigirrd.config.environment import load_environment
 from vigirrd import model
 
+CACHE_KEEP_MINUTES = 5
 LOGGER = logging.getLogger(__name__)
 
 
-def import_vigiconf(conf_file):
+def load_conf():
     LOGGER.info("Loading the configuration")
+    conf_file = os.getenv("VIGILO_SETTINGS",
+                          "/etc/vigilo/vigirrd/settings.ini")
     # Chargement de la configuration de VigiRRD
     conf = appconfig("config:%s#main" % conf_file)
     load_environment(conf.global_conf, conf.local_conf)
+
+def import_vigiconf(conf_file):
+    """
+    Importe la configuration générée par VigiConf en base de données.
+    Cette fonction est exportée en exécutable par un point d'entrée.
+    """
+    load_conf()
     # Chargement du schéma de la base
     LOGGER.debug("Re-creating tables")
     engine = config['pylons.app_globals'].sa_engine
@@ -79,9 +90,27 @@ def chmod_644(filename):
              stat.S_IRUSR | stat.S_IWUSR | \
              stat.S_IRGRP | stat.S_IROTH )
 
-def main():
-    conf_file = os.getenv("VIGILO_SETTINGS", "/etc/vigilo/vigirrd/settings.ini")
-    import_vigiconf(conf_file)
+
+def cleanup_cache():
+    """
+    Nettoyage du cache des images, à mettre dans cron.
+    Cette fonction est exportée en exécutable par un point d'entrée.
+    """
+    load_conf()
+    cache_dir = config["image_cache_dir"]
+    if not os.path.exists(cache_dir):
+        return
+    limit = int(time.time()) - CACHE_KEEP_MINUTES * 60
+    for img in os.listdir(cache_dir):
+        if not img.endswith(".png"):
+            continue
+        img_path = os.path.join(cache_dir, img)
+        img_ts = os.stat(img_path).st_mtime
+        if img_ts >= limit:
+            continue
+        LOGGER.debug("Removing %s" % img_path)
+        os.remove(img_path)
+
 
 if __name__ == "__main__":
-    main()
+    import_vigiconf()
