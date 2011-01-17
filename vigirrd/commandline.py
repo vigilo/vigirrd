@@ -26,7 +26,7 @@ def load_conf():
     conf = appconfig("config:%s#main" % conf_file)
     load_environment(conf.global_conf, conf.local_conf)
 
-def import_vigiconf(conf_file):
+def import_vigiconf():
     """
     Importe la configuration générée par VigiConf en base de données.
     Cette fonction est exportée en exécutable par un point d'entrée.

@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """Unit and functional test suite for vigirrd."""
 
-from os import path
+import os
 import sys
 import platform
 
@@ -57,7 +57,7 @@ class TestController(unittest.TestCase):
         # Charge "test32.ini" pour les archis 32 bits
         # et "test64.ini" pour les archis 64 bits.
         arch = (platform.machine() != 'i686') and '64' or '32'
-        config_file = path.join(conf_dir, 'test%s.ini' % arch)
+        config_file = os.path.join(conf_dir, 'test%s.ini' % arch)
         wsgiapp = loadapp('config:%s#%s' % (config_file,
                                             self.application_under_test),
                           relative_to=conf_dir)
@@ -66,7 +66,8 @@ class TestController(unittest.TestCase):
         cmd = SetupCommand('setup-app')
         cmd.run([config_file])
         # Import VigiConf
-        import_vigiconf(config_file)
+        os.environ["VIGILO_SETTINGS"] = config_file
+        import_vigiconf()
 
     def tearDown(self):
         """Method called by nose after running each test"""
