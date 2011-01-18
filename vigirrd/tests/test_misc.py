@@ -41,7 +41,7 @@ class TestMisc(TestController):
                 'sysUpTime',
             ),
         )
-        self.assertEqual(response.json['lastvalue'], 254241.38667000001)
+        self.assertEqual(response.json['lastvalue'], 2.9426086420138886)
 
     def test_start_time_nominal(self):
         """Récupération de 'starttime' : cas nominal"""

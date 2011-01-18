@@ -51,6 +51,7 @@ from vigilo.common import get_rrd_path
 
 from vigirrd.lib import conffile
 from vigirrd.model import DBSession, Host, Graph, PerfDataSource
+from vigirrd.model.secondary_tables import GRAPH_PERFDATASOURCE_TABLE
 
 
 def dateToDateObj(date):
@@ -694,7 +695,7 @@ class RRD(object):
             cmd[-1] = cmd[-1] + "\\n"
         return cmd
 
-    def getLastValue(self):
+    def getLastValue(self, ds):
         """
         Lecture derniere valeur RRD
         @return: Dernière valeur.
@@ -720,4 +721,17 @@ class RRD(object):
         if len(data) == 0 or len(data[0]) == 0:
             return None
 
-        return data[0][0]
+        lastValue = data[0][0]
+        factor = DBSession.query(
+                PerfDataSource.factor
+            ).join(
+                (GRAPH_PERFDATASOURCE_TABLE,
+                    GRAPH_PERFDATASOURCE_TABLE.c.idperfdatasource ==
+                    PerfDataSource.idperfdatasource),
+                (Graph, Graph.idgraph == GRAPH_PERFDATASOURCE_TABLE.c.idgraph),
+            ).filter(PerfDataSource.name == unicode(ds)
+            ).filter(Graph.idhost == self.host.idhost
+            ).scalar()
+        if factor is None:
+            factor = 1
+        return lastValue * factor

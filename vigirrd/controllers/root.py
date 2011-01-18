@@ -175,7 +175,7 @@ class RootController(BaseController):
             raise HTTPNotFound('The datasource "%s" does not exist, '
                 'or has never been collected yet.' % ds)
         rrdfile = rrd.RRD(filename=str(filename), server=str(host))
-        return {"lastvalue": rrdfile.getLastValue(),
+        return {"lastvalue": rrdfile.getLastValue(ds),
                 "host": host,
                 "ds": ds
                 }

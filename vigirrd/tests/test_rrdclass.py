@@ -115,8 +115,8 @@ class TestRRDclass(TestController):
         '''Récupération de la dernière valeur de métrologie dans un RRD.'''
         result = None
         if self.rrd is not None:
-            result = self.rrd.getLastValue()
-        answer = 254241.38667000001
+            result = self.rrd.getLastValue("sysUpTime")
+        answer = 2.9426086420138886
         self.assertEqual(result, answer, "getLastValue() does not work")
 
     def test_exportCSV(self):
