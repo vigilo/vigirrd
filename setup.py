@@ -51,7 +51,6 @@ setup(
     main = pylons.util:PylonsInstaller
 
     [console_scripts]
-    vigirrd-import-vigiconf = vigirrd.commandline:import_vigiconf
     vigirrd-cleanup-cache = vigirrd.commandline:cleanup_cache
     """,
     data_files=[
