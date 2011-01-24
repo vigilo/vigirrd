@@ -58,7 +58,6 @@ setup(
             'deployment/vigirrd.conf',
             'deployment/vigirrd.wsgi',
             'deployment/settings.ini',
-            'conf/graphs.py.dist',
             'conf/templates.py',
         ]),
         ('/etc/cron.d/', ['deployment/vigirrd.cron']),
