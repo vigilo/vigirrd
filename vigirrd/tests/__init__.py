@@ -13,7 +13,6 @@ from webtest import TestApp
 from nose.tools import eq_
 
 from vigirrd.model import metadata, DBSession
-from vigirrd.commandline import import_vigiconf
 
 __all__ = ['setup_db', 'teardown_db', 'TestController']
 
@@ -22,7 +21,6 @@ __all__ = ['setup_db', 'teardown_db', 'TestController']
 #    print "Creating model"
 #    engine = config['pylons.app_globals'].sa_engine
 #    metadata.create_all(engine)
-#    import_vigiconf(config["vigiconf_file"])
 #
 #def teardown_db():
 #    """Method used to destroy a database"""
@@ -62,14 +60,11 @@ class TestController(unittest.TestCase):
                                             self.application_under_test),
                           relative_to=conf_dir)
         self.app = TestApp(wsgiapp)
-        # Setting it up:
-        cmd = SetupCommand('setup-app')
-        cmd.run([config_file])
-        # Import VigiConf
-        os.environ["VIGILO_SETTINGS"] = config_file
-        import_vigiconf()
+        ## Setting it up:
+        #cmd = SetupCommand('setup-app')
+        #cmd.run([config_file])
 
-    def tearDown(self):
-        """Method called by nose after running each test"""
-        engine = config['pylons.app_globals'].sa_engine
-        metadata.drop_all(engine)
+    #def tearDown(self):
+    #    """Method called by nose after running each test"""
+    #    engine = config['pylons.app_globals'].sa_engine
+    #    metadata.drop_all(engine)
