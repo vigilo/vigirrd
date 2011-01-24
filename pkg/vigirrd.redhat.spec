@@ -87,7 +87,6 @@ rm -rf $RPM_BUILD_ROOT
 %config(noreplace) %attr(640,root,apache) %{_sysconfdir}/vigilo/%{module}/*.ini
 %ghost %{_sysconfdir}/vigilo/%{module}/*.pyo
 %ghost %{_sysconfdir}/vigilo/%{module}/*.pyc
-%{_sysconfdir}/vigilo/%{module}/graphs.py.dist
 %config(noreplace) %{_sysconfdir}/httpd/conf.d/*
 %config(noreplace) %{_sysconfdir}/cron.d/*
 %dir %{_localstatedir}/log/vigilo/
