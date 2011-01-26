@@ -99,6 +99,9 @@ Requires:   python-zope.sqlalchemy
 
 Buildarch:  noarch
 
+# Pour l'utilisateur vigilo-metro
+Requires(pre):   vigilo-connector-metro
+
 Obsoletes:  vigilo-rrdgraph <= 2.0.1
 Provides:   vigilo-rrdgraph = %{version}-%{release}
 
@@ -125,6 +128,10 @@ make install \
 make apidoc || :
 
 %find_lang %{name}
+
+
+%pre
+usermod -a -G vigilo-metro apache
 
 %post
 /sbin/service httpd condrestart > /dev/null 2>&1 || :

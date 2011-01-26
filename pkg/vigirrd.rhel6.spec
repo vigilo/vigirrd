@@ -33,6 +33,9 @@ Provides:   %{name}-confmgr = %{version}-%{release}
 Obsoletes:  %{name}-vigiconf < 2.0.0-2
 Provides:   %{name}-vigiconf = %{version}-%{release}
 
+# Pour l'utilisateur vigilo-metro
+Requires(pre):   vigilo-connector-metro
+
 Obsoletes:  vigilo-rrdgraph <= 2.0.1
 Provides:   vigilo-rrdgraph = %{version}-%{release}
 
@@ -60,6 +63,9 @@ make install \
 make apidoc || :
 
 #%find_lang %{name}
+
+%pre
+usermod -a -G vigilo-metro apache
 
 %post
 /sbin/service httpd condrestart > /dev/null 2>&1 || :

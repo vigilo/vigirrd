@@ -41,6 +41,18 @@ class RootController(BaseController):
 
     """
 
+    def __init__(self, *args, **kw):
+        super(RootController, self).__init__(*args, **kw)
+        # Utilisation de rrdcached
+        rrdcached = config.get("rrdcached", None)
+        if rrdcached is not None:
+            if os.path.exists(rrdcached) and os.access(rrdcached, os.W_OK):
+                os.environ["RRDCACHED_ADDRESS"] = rrdcached
+            else:
+                LOGGER.warning(_("No access to the rrdcached socket: %s"),
+                               rrdcached)
+
+
     error = ErrorController()
 
     @expose()
