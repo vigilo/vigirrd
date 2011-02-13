@@ -154,6 +154,7 @@ rm -rf $RPM_BUILD_ROOT
 %config(noreplace) %{_sysconfdir}/cron.d/*
 %dir %{_localstatedir}/log/vigilo/
 %attr(750,apache,apache) %{_localstatedir}/log/vigilo/%{module}
+%config(noreplace) %{_sysconfdir}/logrotate.d/%{module}
 %attr(750,apache,apache) %{_localstatedir}/cache/vigilo/sessions
 %attr(750,apache,apache) %dir %{_localstatedir}/cache/vigilo/vigirrd
 %attr(750,apache,apache) %dir %{_localstatedir}/cache/vigilo/vigirrd/img
