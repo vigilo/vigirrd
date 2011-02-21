@@ -567,12 +567,22 @@ class RRD(object):
             a.append("--height")
             a.append(64)
         else:
+            title = _('From %(start)s to %(end)s') % {
+                'start': datetime.datetime.utcfromtimestamp(start_i).strftime(
+                            '%x %X'.encode('utf-8')).decode('utf-8', 'replace'),
+                'end': datetime.datetime.utcfromtimestamp(end_i).strftime(
+                            '%x %X'.encode('utf-8')).decode('utf-8', 'replace'),
+            }
+            a.append(title.encode('utf-8'))
+
             if len(self.server) > 35:
                 ellipsis_server = self.server[:15] + '(...)' + \
                                     self.server[-15:]
             else:
                 ellipsis_server = self.server
+            a.append("--watermark")
             a.append("%s: %s" % (ellipsis_server, template["name"]))
+
             a.append("--width")
             a.append(self.host.width)
             a.append("--height")

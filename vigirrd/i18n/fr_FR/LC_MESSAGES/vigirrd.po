@@ -8,7 +8,7 @@ msgstr ""
 "Project-Id-Version: vigirrd 2.0.0\n"
 "Report-Msgid-Bugs-To: contact@projet-vigilo.org\n"
 "POT-Creation-Date: 2010-05-12 11:49+0200\n"
-"PO-Revision-Date: 2010-11-19 14:40+0100\n"
+"PO-Revision-Date: 2011-02-15 14:11+0100\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: fr_FR <LL@li.org>\n"
 "Plural-Forms: nplurals=2; plural=(n > 1)\n"
@@ -17,7 +17,17 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Generated-By: Babel 0.9.4\n"
 
-#: vigirrd/lib/rrd.py:590
+#: vigirrd/controllers/root.py:52
+#, python-format
+msgid "No access to the rrdcached socket: %s"
+msgstr "Pas d'accès au socket de rrdcached: %s"
+
+#: vigirrd/lib/rrd.py:570
+#, python-format
+msgid "From %(start)s to %(end)s"
+msgstr "Du %(start)s au %(end)s"
+
+#: vigirrd/lib/rrd.py:599
 msgid "value"
 msgstr "valeur"
 
@@ -45,9 +55,8 @@ msgid "Back to servers list"
 msgstr "Retour à la liste des serveurs"
 
 #: vigirrd/templates/graph.html:16
-#, fuzzy
 msgid "Back to graphs list"
-msgstr "Retour à la liste des serveurs"
+msgstr "Retour à la liste des graphes"
 
 #: vigirrd/templates/graphs.html:13
 msgid "Please choose one of these graphs:"
@@ -56,4 +65,3 @@ msgstr "Veuillez choisir l'une de ces graphes :"
 #: vigirrd/templates/servers.html:13
 msgid "Please choose one of these servers:"
 msgstr "Veuillez choisir l'un de ces serveurs :"
-
