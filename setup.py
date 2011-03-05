@@ -37,7 +37,10 @@ setup(
     },
     package_data={'vigirrd': ['i18n/*/LC_MESSAGES/*.mo',
                               'templates/*/*',
-                              'public/*/*']},
+                              'public/*/*'],
+                  'vigirrd.tests': ["testdata/*/*.*",
+                                    "testdata/*/*/*/*.*"],
+    },
     message_extractors={'vigirrd': [
             ('**.py', 'python', None),
             ('templates/**.html', 'genshi', None),
