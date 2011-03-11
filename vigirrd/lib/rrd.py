@@ -722,6 +722,9 @@ class RRD(object):
             return None
 
         lastValue = data[0][0]
+        if lastValue is None:
+            return None
+
         factor = DBSession.query(
                 PerfDataSource.factor
             ).join(
