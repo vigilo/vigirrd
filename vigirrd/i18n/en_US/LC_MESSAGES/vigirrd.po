@@ -1,14 +1,14 @@
 # English translations for vigirrd.
-# Copyright (C) 2010 ORGANIZATION
+# Copyright (C) 2011 ORGANIZATION
 # This file is distributed under the same license as the vigirrd project.
-# FIRST AUTHOR <EMAIL@ADDRESS>, 2010.
+# FIRST AUTHOR <EMAIL@ADDRESS>, 2011.
 #
 msgid ""
 msgstr ""
 "Project-Id-Version: vigirrd 2.0.0\n"
 "Report-Msgid-Bugs-To: contact@projet-vigilo.org\n"
-"POT-Creation-Date: 2010-11-19 14:40+0100\n"
-"PO-Revision-Date: 2010-11-19 14:40+0100\n"
+"POT-Creation-Date: 2011-03-22 09:54+0100\n"
+"PO-Revision-Date: 2011-03-22 09:55+0100\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: en <LL@li.org>\n"
 "Plural-Forms: nplurals=2; plural=(n != 1)\n"
@@ -17,7 +17,12 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Generated-By: Babel 0.9.4\n"
 
-#: vigirrd/lib/rrd.py:590
+#: vigirrd/controllers/root.py:52
+#, python-format
+msgid "No access to the rrdcached socket: %s"
+msgstr "No access to the rrdcached socket: %s"
+
+#: vigirrd/lib/rrd.py:598
 msgid "value"
 msgstr "value"
 

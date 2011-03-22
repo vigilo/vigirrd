@@ -8,7 +8,7 @@ msgstr ""
 "Project-Id-Version: vigirrd 2.0.0\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
 "POT-Creation-Date: 2010-11-19 14:40+0100\n"
-"PO-Revision-Date: 2010-11-19 14:40+0100\n"
+"PO-Revision-Date: 2011-03-22 09:54+0100\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: de_DE <LL@li.org>\n"
 "Plural-Forms: nplurals=2; plural=(n != 1)\n"
@@ -17,7 +17,12 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Generated-By: Babel 0.9.4\n"
 
-#: vigirrd/lib/rrd.py:590
+#: vigirrd/controllers/root.py:52
+#, python-format
+msgid "No access to the rrdcached socket: %s"
+msgstr ""
+
+#: vigirrd/lib/rrd.py:598
 msgid "value"
 msgstr "Wert"
 
