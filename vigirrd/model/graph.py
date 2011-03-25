@@ -13,9 +13,9 @@ from vigirrd.model.secondary_tables import GRAPH_PERFDATASOURCE_TABLE
 
 class Graph(DeclarativeBase):
     __tablename__ = 'graph'
-    
+
     idgraph = Column(Integer, primary_key=True, autoincrement=True)
-    idhost = Column(Integer, 
+    idhost = Column(Integer,
                     ForeignKey(Host.idhost),
                     autoincrement=True)
     host = relation('Host', back_populates="graphs", lazy=True)
@@ -26,7 +26,8 @@ class Graph(DeclarativeBase):
 
     perfdatasources = relation('PerfDataSource',
                                secondary=GRAPH_PERFDATASOURCE_TABLE,
-                               back_populates='graphs', lazy=True)
+                               back_populates='graphs', lazy=True,
+                               order_by=GRAPH_PERFDATASOURCE_TABLE.c.order)
 
     def __unicode__(self):
         return "%s on %s" % (self.name, self.host.name)

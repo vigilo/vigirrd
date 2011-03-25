@@ -20,5 +20,6 @@ GRAPH_PERFDATASOURCE_TABLE = Table(
     Column('idgraph', Integer, ForeignKey(
                 'graph.idgraph',
                 onupdate="CASCADE", ondelete="CASCADE"),
-            primary_key=True, autoincrement=False)
+            primary_key=True, autoincrement=False),
+    Column('order', Integer, nullable=False)
 )
