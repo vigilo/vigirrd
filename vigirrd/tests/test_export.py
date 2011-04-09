@@ -1,13 +1,13 @@
 # -*- coding: utf-8 -*-
-"""
-"""
-import tg
+# pylint: disable-msg=C0111,R0904
+
 import time
 
 from vigirrd.lib import conffile
 from vigirrd.tests import TestController
 
 class TestExportCSV(TestController):
+
     def setUp(self):
         super(TestExportCSV, self).setUp()
         conffile.reload()

@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+# pylint: disable-msg=R0201,R0913
 """Main Controller"""
 
 import os
@@ -9,10 +10,9 @@ from logging import getLogger
 LOGGER = getLogger(__name__)
 
 import pylons
-from tg import expose, flash, require, url, request, redirect, config, response
-from pylons.i18n import ugettext as _, lazy_ugettext as l_
-from tg.exceptions import HTTPServiceUnavailable, HTTPNotFound, \
-                            HTTPInternalServerError
+from tg import expose, url, redirect, config, response
+from pylons.i18n import ugettext as _
+from tg.exceptions import HTTPServiceUnavailable, HTTPNotFound
 from tg.controllers import CUSTOM_CONTENT_TYPE
 
 from vigirrd.lib.base import BaseController
@@ -21,7 +21,7 @@ from vigilo.turbogears.controllers.error import ErrorController
 
 from vigirrd.lib import conffile
 from vigirrd.lib import rrd
-from vigirrd.model import DBSession, Host, Graph, PerfDataSource
+from vigirrd.model import DBSession, Host
 
 __all__ = ['RootController']
 
@@ -92,7 +92,7 @@ class RootController(BaseController):
         })
 
     @expose("json")
-    def starttime(self, host, nocache=None):
+    def starttime(self, host, nocache=None): # pylint: disable-msg=W0613
         try:
             value = rrd.getStartTime(str(host))
         except rrd.RRDError:
@@ -178,7 +178,7 @@ class RootController(BaseController):
                    }
 
     @expose("json")
-    def lastvalue(self, host, ds, nocache=None):
+    def lastvalue(self, host, ds, nocache=None): # pylint: disable-msg=W0613
         server = Host.by_name(host)
         if not server:
             raise HTTPNotFound("Unknown host: %s" % host)
@@ -194,7 +194,7 @@ class RootController(BaseController):
 
     @expose(content_type=CUSTOM_CONTENT_TYPE)
     def export(self, host, graphtemplate, ds=None,
-        start=None, end=None, nocache=None):
+        start=None, end=None, nocache=None): # pylint: disable-msg=W0613
         '''
         export CSV
 

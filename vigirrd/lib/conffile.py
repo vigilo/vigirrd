@@ -26,8 +26,6 @@ Configuration for RRDGraph basée sur des fichiers de conf.
 Le fonctionnement est inspiré du module de configuration de Django.
 """
 
-import sys
-import glob
 import os
 import UserDict
 from logging import getLogger
@@ -109,6 +107,8 @@ def reload():
     #del files
     #templates = settings.get("templates", {})
 
+# pylint: disable-msg=C0103
 settings = Settings()
+templates = {}
 reload()
 

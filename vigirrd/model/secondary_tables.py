@@ -6,9 +6,9 @@ Contient les tables intermédiaires utilisées dans les relations de type
 """
 
 from sqlalchemy import Column, ForeignKey, Table
-from sqlalchemy.types import Unicode, Integer
+from sqlalchemy.types import Integer
 
-from vigirrd.model import DeclarativeBase, metadata
+from vigirrd.model import metadata
 
 
 GRAPH_PERFDATASOURCE_TABLE = Table(

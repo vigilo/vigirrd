@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 # vim:set expandtab tabstop=4 shiftwidth=4:
+# pylint: disable-msg=R0903,W0232
 """Hosts: les hôtes supervisés"""
 
 from sqlalchemy import Column, ForeignKey

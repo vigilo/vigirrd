@@ -2,17 +2,14 @@
 """Setup the vigirrd application"""
 
 import os
-import stat
 import time
 import logging
 logging.basicConfig(level=logging.DEBUG)
 
-import transaction
 from tg import config
 from paste.deploy import appconfig
 
 from vigirrd.config.environment import load_environment
-from vigirrd import model
 
 CACHE_KEEP_MINUTES = 5
 LOGGER = logging.getLogger(__name__)

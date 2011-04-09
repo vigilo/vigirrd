@@ -1,10 +1,11 @@
 # -*- coding: utf-8 -*-
 # vim:set expandtab tabstop=4 shiftwidth=4:
+# pylint: disable-msg=R0903,W0232
 """Perfdatasources: les indicateurs de métrologie"""
 
-from sqlalchemy import Column, ForeignKey
+from sqlalchemy import Column
 from sqlalchemy.orm import relation
-from sqlalchemy.types import Integer, Unicode, UnicodeText, Float
+from sqlalchemy.types import Integer, UnicodeText, Float
 
 from vigirrd.model import DeclarativeBase, DBSession
 from vigirrd.model.secondary_tables import GRAPH_PERFDATASOURCE_TABLE

@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
-"""
-"""
-import tg
+# pylint: disable-msg=C0111,R0904
+
 import time
 
 from vigirrd.lib import conffile

@@ -1,10 +1,9 @@
 # -*- coding: utf-8 -*-
+# pylint: disable-msg=C0111,R0904
+
 import os
-import unittest
 import tempfile
 import shutil
-import filecmp
-from pprint import pprint
 
 import tg
 from vigirrd import model
@@ -78,8 +77,8 @@ class TestRRDclass(TestController):
         tmpdir = tempfile.mkdtemp()
         tmpfile = os.path.join(tmpdir, "graph.svg")
 
-        graphfile = os.path.join(tg.config["rrd_base"],
-                                 "testserver", "graph.svg")
+        #graphfile = os.path.join(tg.config["rrd_base"],
+        #                         "testserver", "graph.svg")
         start = 1232694600
         duration = 3500
 
@@ -106,8 +105,6 @@ class TestRRDclass(TestController):
 #                result = filecmp.cmp(tmpfile, graphfile)
 #            self.assertEqual(result, True, "The generated graph is different "
 #                "(%s vs. %s)" % (tmpfile, graphfile))
-        except:
-            raise
         finally:
             shutil.rmtree(tmpdir)
 

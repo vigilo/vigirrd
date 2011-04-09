@@ -21,7 +21,7 @@ from vigilo.turbogears import VigiloAppConfig
 
 import vigirrd
 import vigirrd.model
-from vigirrd.lib import app_globals, helpers
+
 
 class VigiRRDConfig(VigiloAppConfig):
     def __init__(self, *args, **kwargs):

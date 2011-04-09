@@ -27,24 +27,19 @@ Composant Python pour afficher les données contenues dans des fichiers RRD
 
 import rrdtool
 import os
-import re
 import glob
 import time
 import calendar
 import datetime
-import sys
-import tempfile
-import urllib
 import csv
 import locale
 from cStringIO import StringIO
-import hashlib
 
 from logging import getLogger
 LOGGER = getLogger(__name__)
 
 from tg import config, request
-from pylons.i18n import ugettext as _, lazy_ugettext as l_
+from pylons.i18n import ugettext as _
 from paste.deploy.converters import asbool
 
 from vigilo.common import get_rrd_path
@@ -350,9 +345,12 @@ def getExportFileName(host, ds_graph, start, end):
     return filename
 
 
-class RRDError(Exception): pass
-class RRDNoDSError(RRDError): pass
-class RRDNotFoundError(RRDError): pass
+class RRDError(Exception):
+    pass
+class RRDNoDSError(RRDError):
+    pass
+class RRDNotFoundError(RRDError):
+    pass
 
 class RRD(object):
     """An RRD database"""
@@ -381,14 +379,14 @@ class RRD(object):
         first =  rrdtool.first(self.filename)
         end = rrdtool.last(self.filename)
         try:
-            info , ds_rrd , data = rrdtool.fetch(self.filename, \
-            "AVERAGE", "--start", str(first), "--end", str(end))
-        except rrdtool.error, e:
+            info , _ds_rrd , data = rrdtool.fetch(self.filename,
+                    "AVERAGE", "--start", str(first), "--end", str(end))
+        except rrdtool.error:
             # Adjust for daylight saving times
             first = first - 3600
             end = end + 3600
-            info , ds_rrd , data = rrdtool.fetch(self.filename, \
-            "AVERAGE", "--start", str(first), "--end", str(end))
+            info , _ds_rrd , data = rrdtool.fetch(self.filename,
+                    "AVERAGE", "--start", str(first), "--end", str(end))
         #start_rrd = info[0]
         #end_rrd = info[1]
         step = info[2]
@@ -429,7 +427,7 @@ class RRD(object):
         if start_a is None:
             try:
                 start = self.getStartTime() - 1
-            except RRDError, e:
+            except RRDError:
                 # RRD is empty
                 return res
         else:
@@ -504,7 +502,7 @@ class RRD(object):
             args.append("%s@%s" % (timestamp, ":".join(clean_values)))
             try:
                 rrdtool.update(*args)
-            except rrdtool.error, e:
+            except rrdtool.error:
                 # Daylight savings
                 LOGGER.info("Skipped daylight savings (timestamp = %s)",
                             timestamp)
@@ -517,7 +515,7 @@ class RRD(object):
             if not os.path.exists(imgdir):
                 os.makedirs(imgdir)
 
-        step = self.host.step
+        #step = self.host.step
         #import pprint
         #pprint.pprint(template)
 
@@ -533,18 +531,18 @@ class RRD(object):
         # Compute the x-axis labels
         duration_i = end_i - start_i
 
-        if duration_i <= 7 * 3600:
-            xgrid = "MINUTE:30:HOUR:1:HOUR:1:0:%d/%m %Hh"
-        elif duration_i > 7 * 3600 and duration_i <= 25 * 3600:
-            xgrid = "HOUR:1:HOUR:6:HOUR:6:0:%d/%m %Hh"
-        elif duration_i > 25 * 3600 and duration_i <= 8 * 24 * 3600:
-            xgrid = "HOUR:6:DAY:1:DAY:1:0:%d/%m"
-        elif duration_i > 8 * 24 * 3600 and duration_i <= 15 * 24 * 3600:
-            xgrid = "DAY:1:DAY:2:DAY:2:0:%d/%m"
-        elif duration_i > 15 * 24 * 3600 and duration_i <= 4 * 31  * 24 * 3600:
-            xgrid = "DAY:5:DAY:10:DAY:10:0:%d/%m"
-        else:
-            xgrid = "WEEK:2:MONTH:1:MONTH:1:0:%b"
+        #if duration_i <= 7 * 3600:
+        #    xgrid = "MINUTE:30:HOUR:1:HOUR:1:0:%d/%m %Hh"
+        #elif duration_i > 7 * 3600 and duration_i <= 25 * 3600:
+        #    xgrid = "HOUR:1:HOUR:6:HOUR:6:0:%d/%m %Hh"
+        #elif duration_i > 25 * 3600 and duration_i <= 8 * 24 * 3600:
+        #    xgrid = "HOUR:6:DAY:1:DAY:1:0:%d/%m"
+        #elif duration_i > 8 * 24 * 3600 and duration_i <= 15 * 24 * 3600:
+        #    xgrid = "DAY:1:DAY:2:DAY:2:0:%d/%m"
+        #elif duration_i > 15 * 24 * 3600 and duration_i <= 4 * 31  * 24 * 3600:
+        #    xgrid = "DAY:5:DAY:10:DAY:10:0:%d/%m"
+        #else:
+        #    xgrid = "WEEK:2:MONTH:1:MONTH:1:0:%b"
         a = [
                 str(outfile),
                 #"--step", str(step),
@@ -701,9 +699,6 @@ class RRD(object):
         @return: Dernière valeur.
         @rtype: C{str} ou C{None}
         """
-
-        value = None
-
         # dernier timestamp et step
         lasttime = self.getLast()
         step = self.getStep()
@@ -715,8 +710,8 @@ class RRD(object):
         end = lasttime
 
         # informations
-        info, ds_rrd, data = rrdtool.fetch(self.filename, "AVERAGE",
-                             "--start", str(start), "--end", str(end))
+        _info, _ds_rrd, data = rrdtool.fetch(self.filename, "AVERAGE",
+                               "--start", str(start), "--end", str(end))
 
         if len(data) == 0 or len(data[0]) == 0:
             return None
@@ -738,3 +733,4 @@ class RRD(object):
         if factor is None:
             factor = 1
         return lastValue * factor
+

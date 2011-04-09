@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
-"""The application's model objects"""
+# pylint: disable-msg=C0103
+"""The application's model objects""" 
 
 from zope.sqlalchemy import ZopeTransactionExtension
 from sqlalchemy.orm import scoped_session, sessionmaker
