@@ -1,14 +1,11 @@
-%define module  vigirrd
-%define name    vigilo-%{module}
-%define version 2.0.0
-%define release 1%{?svn}%{?dist}
+%define module  @SHORT_NAME@
 
-Name:       %{name}
-Summary:    Web interface to display RRD files in vigilo
-Version:    %{version}
-Release:    %{release}
+Name:       vigilo-%{module}
+Summary:    @SUMMARY@
+Version:    @VERSION@
+Release:    1%{?svn}%{?dist}
 Source0:    %{module}-%{version}.tar.gz
-URL:        http://www.projet-vigilo.org
+URL:        @URL@
 Group:      System/Servers
 BuildRoot:  %{_tmppath}/%{name}-%{version}-%{release}-build
 License:    GPLv2
@@ -39,9 +36,9 @@ Requires(pre):   vigilo-connector-metro
 Obsoletes:  vigilo-rrdgraph <= 2.0.1
 Provides:   vigilo-rrdgraph = %{version}-%{release}
 
+
 %description
-Web interface to display RRD files
-Web interface based on mod_python to display the RRD graphs.
+@DESCRIPTION@
 This application is part of the Vigilo Project <http://vigilo-project.org>
 
 
@@ -63,6 +60,7 @@ make install \
 make apidoc || :
 
 #%find_lang %{name}
+
 
 %pre
 usermod -a -G vigilo-metro apache

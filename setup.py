@@ -17,11 +17,12 @@ sysconfdir = os.getenv("SYSCONFDIR", "/etc")
 setup(
     name='vigirrd',
     version='2.0.0',
-    description='',
     author='Vigilo Team',
     author_email='contact@projet-vigilo.org',
     url='http://www.projet-vigilo.org/',
     license='http://www.gnu.org/licenses/gpl-2.0.html',
+    description="Web interface to display RRD files in Vigilo",
+    long_description="Web interface to display RRD files in Vigilo",
     install_requires=[
         "vigilo-turbogears",
         "py-rrdtool",
