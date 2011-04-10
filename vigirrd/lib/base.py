@@ -2,6 +2,10 @@
 
 """The base Controller API."""
 
+#from tg import TGController, tmpl_context
+#from tg.render import render
+#from pylons.i18n import _, ungettext, N_
+#from tw.api import WidgetBunch
 from tg import TGController
 
 __all__ = ['Controller', 'BaseController']

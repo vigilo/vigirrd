@@ -21,6 +21,7 @@ from vigilo.turbogears import VigiloAppConfig
 
 import vigirrd
 import vigirrd.model
+from vigirrd.lib import app_globals, helpers # pylint: disable-msg=W0611
 
 
 class VigiRRDConfig(VigiloAppConfig):
