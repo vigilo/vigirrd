@@ -15,7 +15,7 @@ tests_require = ['WebTest', 'BeautifulSoup']
 sysconfdir = os.getenv("SYSCONFDIR", "/etc")
 
 setup(
-    name='vigirrd',
+    name='vigilo-vigirrd',
     version='2.0.0',
     author='Vigilo Team',
     author_email='contact@projet-vigilo.org',

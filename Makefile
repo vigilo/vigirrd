@@ -3,7 +3,6 @@ NAME := vigirrd
 all: build
 
 include buildenv/Makefile.common
-PKGNAME := $(NAME)
 MODULE := $(NAME)
 CODEPATH := $(NAME)
 

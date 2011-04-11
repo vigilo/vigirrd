@@ -10,7 +10,7 @@ Name:       vigilo-%{module}
 Summary:    @SUMMARY@
 Version:    @VERSION@
 Release:    1%{?svn}%{?dist}
-Source0:    %{module}-%{version}.tar.gz
+Source0:    %{name}-%{version}.tar.gz
 URL:        @URL@
 Group:      System/Servers
 BuildRoot:  %{_tmppath}/%{name}-%{version}-%{release}-build
@@ -50,7 +50,7 @@ This application is part of the Vigilo Project <http://vigilo-project.org>
 
 
 %prep
-%setup -q -n %{module}-%{version}
+%setup -q
 # A cause des permissions sur /var/log/httpd sur Red Hat
 sed -i -e '/<IfModule mod_wsgi\.c>/a WSGISocketPrefix run/wsgi' deployment/%{module}.conf
 
