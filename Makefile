@@ -10,7 +10,7 @@ install: install_python install_data install_permissions
 install_pkg: install_python_pkg install_data
 
 install_python: settings.ini $(PYTHON)
-	$(PYTHON) setup.py install --root=$(DESTDIR) --record=INSTALLED_FILES
+	$(PYTHON) setup.py install --record=INSTALLED_FILES
 install_python_pkg: settings.ini $(PYTHON)
 	$(PYTHON) setup.py install --single-version-externally-managed --root=$(DESTDIR) --record=INSTALLED_FILES
 
