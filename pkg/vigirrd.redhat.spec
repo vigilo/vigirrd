@@ -55,11 +55,10 @@ This application is part of the Vigilo Project <http://vigilo-project.org>
 sed -i -e '/<IfModule mod_wsgi\.c>/a WSGISocketPrefix run/wsgi' deployment/%{module}.conf
 
 %build
-make PYTHON=%{__python} SYSCONFDIR=%{_sysconfdir}
 
 %install
 rm -rf $RPM_BUILD_ROOT
-make install \
+make install_pkg \
     DESTDIR=$RPM_BUILD_ROOT \
     SYSCONFDIR=%{_sysconfdir} \
     PYTHON=%{__python}

@@ -111,14 +111,13 @@ This application is part of the Vigilo Project <http://vigilo-project.org>
 %setup -q
 
 %build
-make PYTHON=%{_bindir}/python SYSCONFDIR=%{_sysconfdir}
 
 %install
 rm -rf $RPM_BUILD_ROOT
-make install \
+make install_pkg \
     DESTDIR=$RPM_BUILD_ROOT \
     SYSCONFDIR=%{_sysconfdir} \
-    PYTHON=%{_bindir}/python
+    PYTHON=%{__python}
 
 make apidoc || :
 

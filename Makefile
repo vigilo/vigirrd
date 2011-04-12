@@ -6,9 +6,15 @@ include buildenv/Makefile.common
 MODULE := $(NAME)
 CODEPATH := $(NAME)
 
-install: $(PYTHON)
+install: install_python install_data install_permissions
+install_pkg: install_python_pkg install_data
+
+install_python: settings.ini $(PYTHON)
+	$(PYTHON) setup.py install --root=$(DESTDIR) --record=INSTALLED_FILES
+install_python_pkg: settings.ini $(PYTHON)
 	$(PYTHON) setup.py install --single-version-externally-managed --root=$(DESTDIR) --record=INSTALLED_FILES
-	chmod a+rX -R $(DESTDIR)$(PREFIX)/lib*/python*/*
+
+install_data: deployment/logrotate.conf
 	# Permissions de la conf
 	chmod a+rX -R $(DESTDIR)$(SYSCONFDIR)/vigilo/$(NAME)
 	[ `id -u` -ne 0 ] || chgrp $(HTTPD_USER) $(DESTDIR)$(SYSCONFDIR)/vigilo/$(NAME)/*.ini
@@ -38,3 +44,5 @@ tests: tests_nose
 clean: clean_python
 	rm -rf data/img
 	rm -f vigirrd.db
+
+.PHONY: install_pkg install_python install_python_pkg install_data install_permissions
