@@ -678,7 +678,7 @@ class RRD(object):
         cmd.append("CDEF:%s=%s_orig,%1.10f,*" % (i, i, factor))
 
         graphline = "%s:%s%s:%s" % (params["type"], i, params["color"], \
-            label.ljust(justify))
+            label.replace('\\', '\\\\').replace(':', '\\:').ljust(justify))
 #            LOGGER.debug("params=%s, has_key=%d" %
 #                (params, params.has_key("stack")))
         if params.has_key("stack") and params["stack"]:
@@ -733,4 +733,3 @@ class RRD(object):
         if factor is None:
             factor = 1
         return lastValue * factor
-
