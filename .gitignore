@@ -1,0 +1,7 @@
+data
+log/*.log
+vigirrd/i18n/*/LC_MESSAGES/*.mo
+vigirrd/i18n/*/LC_MESSAGES/*.js
+rrd
+vigirrd.db
+conf/graphs.py
