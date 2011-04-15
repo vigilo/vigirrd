@@ -18,9 +18,3 @@ application = loadapp('config:%s' % ini_file)
 from paste.script.util.logging_config import fileConfig
 fileConfig(ini_file)
 
-# Le chargement par TestApp est nécessaire pour éviter
-# des problèmes de concurrence entre les threads.
-# Cf. http://groups.google.com/group/turbogears/browse_thread/thread/0ca4e3fd12a49d44
-import paste.fixture
-app=paste.fixture.TestApp(application)
-app.get("/")
