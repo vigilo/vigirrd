@@ -1,4 +1,18 @@
-recursive-include vigirrd/i18n *
-recursive-include vigirrd/templates *
 include buildenv/Makefile.common
 include buildenv/buildout.*.cfg
+include buildout.cfg
+include Makefile
+include COPYING.txt
+
+graft doc
+graft pkg
+recursive-include vigirrd/i18n *.pot *.po
+
+graft deployment
+graft ez_setup
+graft vigirrd/public
+graft vigirrd/templates
+graft vigirrd/tests/testdata
+graft conf
+include *.ini
+include jsl.cfg
