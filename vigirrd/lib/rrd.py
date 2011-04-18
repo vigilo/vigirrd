@@ -33,6 +33,7 @@ import calendar
 import datetime
 import csv
 import locale
+import copy
 from cStringIO import StringIO
 
 from logging import getLogger
@@ -138,7 +139,10 @@ def showMergedRRDs(server, template_name, outfile='-',
             'template': template_name,
             'available': ", ".join([g.name for g in host.graphs]),
         })
-    template = conffile.templates[graph.template]
+
+    # Copie en profondeur pour éviter des écrasements
+    # de valeurs entre threads (ticket #549).
+    template = copy.deepcopy(conffile.templates[graph.template])
     template["name"] = template_name
     template["vlabel"] = graph.vlabel
     template["last_is_max"] = graph.lastismax
