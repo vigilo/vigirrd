@@ -3,6 +3,9 @@
 #
 # The %(here)s variable will be replaced with the parent directory of this file
 #
+# Copyright (C) 2006-2011 CS-SI
+# License: GNU GPL v2 <http://www.gnu.org/licenses/gpl-2.0.html>
+
 [DEFAULT]
 # WARGING == If debug is not set to false, you'll get the interactive
 # debugger on production, which is a huge security hole. 
