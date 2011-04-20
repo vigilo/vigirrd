@@ -1,29 +1,37 @@
 NAME := vigirrd
 
+SUBST_FILES := deployment/logrotate.conf deployment/settings.ini \
+               deployment/vigirrd.conf deployment/vigirrd.wsgi
+
 all: build
+build: $(SUBST_FILES)
 
 include buildenv/Makefile.common
 MODULE := $(NAME)
 CODEPATH := $(NAME)
 
-install: build install_python install_data install_permissions
+deployment/%: deployment/%.in
+	sed -e 's,@SYSCONFDIR@,$(SYSCONFDIR),g' \
+        -e 's,@LOCALSTATEDIR@,$(LOCALSTATEDIR),g' $^ > $@
+
+install: build install_python install_data
 install_pkg: build install_python_pkg install_data
 
-install_python: $(PYTHON)
+install_python: $(PYTHON) $(SUBST_FILES)
 	$(PYTHON) setup.py install --record=INSTALLED_FILES
-install_python_pkg: $(PYTHON)
+install_python_pkg: $(PYTHON) $(SUBST_FILES)
 	$(PYTHON) setup.py install --single-version-externally-managed --root=$(DESTDIR) --record=INSTALLED_FILES
 
-install_data: deployment/logrotate.conf
+install_data: $(SUBST_FILES)
 	# Permissions de la conf
 	chmod a+rX -R $(DESTDIR)$(SYSCONFDIR)/vigilo/$(NAME)
 	[ `id -u` -ne 0 ] || chgrp $(HTTPD_USER) $(DESTDIR)$(SYSCONFDIR)/vigilo/$(NAME)/*.ini
-	chmod 600 $(DESTDIR)$(SYSCONFDIR)/vigilo/$(NAME)/*.ini
+	chmod 640 $(DESTDIR)$(SYSCONFDIR)/vigilo/$(NAME)/*.ini
 	# Apache
 	mkdir -p $(DESTDIR)$(HTTPD_DIR)
 	ln -f -s $(SYSCONFDIR)/vigilo/$(NAME)/$(NAME).conf $(DESTDIR)$(HTTPD_DIR)/
 	echo $(HTTPD_DIR)/$(NAME).conf >> INSTALLED_FILES
-	mkdir -p $(DESTDIR)/var/log/vigilo/$(NAME)
+	mkdir -p $(DESTDIR)$(LOCALSTATEDIR)/log/vigilo/$(NAME)
 	install -m 644 -p -D deployment/logrotate.conf $(DESTDIR)/etc/logrotate.d/$(NAME)
 	# Déplacement du app_cfg.py
 	mv $(DESTDIR)`grep '$(NAME)/config/app_cfg.py$$' INSTALLED_FILES` $(DESTDIR)$(SYSCONFDIR)/vigilo/$(NAME)/
@@ -42,7 +50,8 @@ install_data: deployment/logrotate.conf
 lint: lint_pylint
 tests: tests_nose
 clean: clean_python
+	rm -f $(SUBST_FILES)
 	rm -rf data/img
 	rm -f vigirrd.db
 
-.PHONY: install_pkg install_python install_python_pkg install_data install_permissions
+.PHONY: install_pkg install_python install_python_pkg install_data

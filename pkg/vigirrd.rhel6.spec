@@ -41,11 +41,10 @@ Provides:   vigilo-rrdgraph = %{version}-%{release}
 @DESCRIPTION@
 This application is part of the Vigilo Project <http://vigilo-project.org>
 
-
 %prep
 %setup -q
 # A cause des permissions sur /var/log/httpd sur Red Hat
-sed -i -e '/<IfModule mod_wsgi\.c>/a WSGISocketPrefix run/wsgi' deployment/%{module}.conf
+sed -i -e '/<IfModule mod_wsgi\.c>/a WSGISocketPrefix run/wsgi' deployment/%{module}.conf.in
 
 %build
 
@@ -54,6 +53,7 @@ rm -rf $RPM_BUILD_ROOT
 make install_pkg \
     DESTDIR=$RPM_BUILD_ROOT \
     SYSCONFDIR=%{_sysconfdir} \
+	LOCALSTATEDIR=%{_localstatedir} \
     PYTHON=%{__python}
 
 make apidoc || :
@@ -70,7 +70,6 @@ usermod -a -G vigilo-metro apache
 %clean
 rm -rf $RPM_BUILD_ROOT
 
-
 %files
 %defattr(644,root,root,755)
 %doc COPYING.txt README.txt
@@ -81,12 +80,11 @@ rm -rf $RPM_BUILD_ROOT
 %config(noreplace) %{_sysconfdir}/vigilo/%{module}/*.py
 %config(noreplace) %{_sysconfdir}/vigilo/%{module}/*.wsgi
 %config(noreplace) %attr(640,root,apache) %{_sysconfdir}/vigilo/%{module}/*.ini
-%{_sysconfdir}/vigilo/%{module}/graphs.py.dist
-%config(noreplace) %{_sysconfdir}/httpd/conf.d/*
-%config(noreplace) %{_sysconfdir}/cron.d/*
+%config(noreplace) /etc/httpd/conf.d/%{module}.conf
+%config(noreplace) /etc/cron.d/*
 %dir %{_localstatedir}/log/vigilo/
 %attr(750,apache,apache) %{_localstatedir}/log/vigilo/%{module}
-%config(noreplace) %{_sysconfdir}/logrotate.d/%{module}
+%config(noreplace) /etc/logrotate.d/%{module}
 %attr(750,apache,apache) %{_localstatedir}/cache/vigilo/sessions
 %attr(750,apache,apache) %dir %{_localstatedir}/cache/vigilo/vigirrd
 %attr(750,apache,apache) %dir %{_localstatedir}/cache/vigilo/vigirrd/img

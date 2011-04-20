@@ -115,9 +115,10 @@ This application is part of the Vigilo Project <http://vigilo-project.org>
 %install
 rm -rf $RPM_BUILD_ROOT
 make install_pkg \
-    DESTDIR=$RPM_BUILD_ROOT \
-    SYSCONFDIR=%{_sysconfdir} \
-    PYTHON=%{__python}
+	DESTDIR=$RPM_BUILD_ROOT \
+	SYSCONFDIR=%{_sysconfdir} \
+	LOCALSTATEDIR=%{_localstatedir} \
+	PYTHON=%{__python}
 
 make apidoc || :
 
@@ -133,7 +134,6 @@ usermod -a -G vigilo-metro apache
 %clean
 rm -rf $RPM_BUILD_ROOT
 
-
 %files -f %{name}.lang
 %defattr(644,root,root,755)
 %doc COPYING.txt README.txt
@@ -144,11 +144,11 @@ rm -rf $RPM_BUILD_ROOT
 %config(noreplace) %{_sysconfdir}/vigilo/%{module}/*.py
 %config(noreplace) %{_sysconfdir}/vigilo/%{module}/*.wsgi
 %config(noreplace) %attr(640,root,apache) %{_sysconfdir}/vigilo/%{module}/*.ini
-%config(noreplace) %{_sysconfdir}/httpd/conf/webapps.d/*
-%config(noreplace) %{_sysconfdir}/cron.d/*
+%config(noreplace) /etc/httpd/conf/webapps.d/%{module}.conf
+%config(noreplace) /etc/cron.d/*
 %dir %{_localstatedir}/log/vigilo/
 %attr(750,apache,apache) %{_localstatedir}/log/vigilo/%{module}
-%config(noreplace) %{_sysconfdir}/logrotate.d/%{module}
+%config(noreplace) /etc/logrotate.d/%{module}
 %attr(750,apache,apache) %{_localstatedir}/cache/vigilo/sessions
 %attr(750,apache,apache) %dir %{_localstatedir}/cache/vigilo/vigirrd
 %attr(750,apache,apache) %dir %{_localstatedir}/cache/vigilo/vigirrd/img

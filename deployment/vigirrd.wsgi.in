@@ -4,12 +4,13 @@
 #import os, sys
 #from pkg_resources import get_distribution
 
-#egg_file = get_distribution('vigirrd').egg_info
+#egg_file = get_distribution('vigilo-vigirrd').egg_info
 
-#os.environ['PYTHON_EGG_CACHE'] = '/tmp/vigirrd/python-eggs'
+#import os
+#os.environ['PYTHON_EGG_CACHE'] = '@LOCALSTATEDIR@/cache/vigilo/eggs'
 
 import os.path
-ini_file = '/etc/vigilo/vigirrd/settings.ini'
+ini_file = '@SYSCONFDIR@/vigilo/vigirrd/settings.ini'
 ini_file = os.path.join('/', *ini_file.split('/'))
 
 from paste.deploy import loadapp
