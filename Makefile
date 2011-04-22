@@ -8,7 +8,6 @@ build: $(SUBST_FILES)
 
 include buildenv/Makefile.common
 MODULE := $(NAME)
-CODEPATH := $(NAME)
 
 deployment/%: deployment/%.in
 	sed -e 's,@SYSCONFDIR@,$(SYSCONFDIR),g' \
