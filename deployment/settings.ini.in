@@ -31,7 +31,7 @@ use = egg:vigilo-vigirrd
 ;
 
 ; URL d'accès à la base de données (le "%(here)s" est normal).
-sqlalchemy.url=sqlite:///%(here)s/../vigiconf/prod/vigirrd.db
+sqlalchemy.url = sqlite:///%(here)s/../vigiconf/prod/vigirrd.db
 
 ; Options de bas niveau de la couche ORM
 ; (pour déboguer les requêtes SQL).
@@ -62,7 +62,7 @@ sa_auth.cookie_secret = vigilo
 
 ; La langue par défaut de l'interface.
 ; VigiRRD n'est pas traduit (interface de débogage).
-;lang=fr
+;lang = fr
 
 ; Emplacement du cache d'images.
 image_cache_dir = /var/cache/vigilo/vigirrd/img
@@ -207,4 +207,4 @@ formatter = generic
 [formatter_generic]
 format = %(asctime)s,%(msecs)03d %(levelname)-5.5s [%(name)s] %(message)s
 datefmt = %H:%M:%S
-class=vigilo.common.logging.VigiloFormatter
+class = vigilo.common.logging.VigiloFormatter
