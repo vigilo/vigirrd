@@ -4,6 +4,7 @@ LoadModule wsgi_module modules/mod_wsgi.so
 
 <IfModule mod_wsgi.c>
 
+WSGISocketPrefix /var/run/wsgi
 WSGIRestrictStdout off
 WSGIPassAuthorization on
 WSGIDaemonProcess vigirrd user=apache group=apache processes=2
