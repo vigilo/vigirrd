@@ -30,6 +30,7 @@ setup(
         "py-rrdtool",
         "simplejson",
     ],
+    zip_safe=False, # pour pouvoir déplacer app_cfg.py
     paster_plugins=['PasteScript', 'Pylons', 'TurboGears2', 'tg.devtools'],
     packages=find_packages(exclude=['ez_setup']),
     include_package_data=True,
