@@ -1,14 +1,14 @@
-# Translations template for vigirrd.
+# Translations template for vigilo-vigirrd.
 # Copyright (C) 2011 ORGANIZATION
-# This file is distributed under the same license as the vigirrd project.
+# This file is distributed under the same license as the vigilo-vigirrd project.
 # FIRST AUTHOR <EMAIL@ADDRESS>, 2011.
 #
 #, fuzzy
 msgid ""
 msgstr ""
-"Project-Id-Version: vigirrd 2.0.0\n"
+"Project-Id-Version: vigilo-vigirrd 2.0.5\n"
 "Report-Msgid-Bugs-To: contact@projet-vigilo.org\n"
-"POT-Creation-Date: 2011-03-22 09:54+0100\n"
+"POT-Creation-Date: 2011-09-28 17:07+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -17,12 +17,17 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Generated-By: Babel 0.9.4\n"
 
-#: vigirrd/controllers/root.py:52
+#: vigirrd/controllers/root.py:55
 #, python-format
 msgid "No access to the rrdcached socket: %s"
 msgstr ""
 
-#: vigirrd/lib/rrd.py:598
+#: vigirrd/lib/rrd.py:629
+#, python-format
+msgid "From \"%(start)s\" to \"%(end)s\""
+msgstr ""
+
+#: vigirrd/lib/rrd.py:641
 msgid "value"
 msgstr ""
 

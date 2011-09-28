@@ -519,6 +519,36 @@ class RRD(object):
             if not os.path.exists(imgdir):
                 os.makedirs(imgdir)
 
+        # On choisit la langue qui sera utilisée pour le rendu.
+        try:
+            lang = request.accept_language.best_matches()
+        except TypeError:
+            # Lorsque le thread n'a pas de "request" associée
+            # (ex: dans les tests unitaires), TypeError est levée.
+            lang = None
+
+        if lang:
+            selected_locale = lang[0].replace('-', '_')
+            if "_" not in selected_locale:
+                selected_locale = "%s_%s" % (selected_locale,
+                                             selected_locale.upper())
+            LOGGER.debug(u"Trying to set rrdtool's locale to %s" %
+                selected_locale)
+            # D'après plusieurs posts sur internet, rrdtool
+            # ne fonctionne qu'avec les locales utilisant UTF-8.
+            # De plus, LC_ALL a la priorité sur LC_TIME,
+            # il faut donc s'en débarrasser.
+            if 'LC_ALL' in os.environ:
+                del os.environ['LC_ALL']
+
+            # os.environ est utilisé par rrdtool,
+            # setlocale() est utilisé par strftime().
+            os.environ['LC_TIME'] = selected_locale
+            try:
+                locale.setlocale(locale.LC_TIME, selected_locale)
+            except locale.Error:
+                pass # locale non supportée, c'est pas grave
+
         #step = self.host.step
         #import pprint
         #pprint.pprint(template)
@@ -596,6 +626,32 @@ class RRD(object):
             labels.append(len(label))
         justify = max(labels)
 
+        # Ajoute la date de début et de fin avant la légende, centrées.
+        # Le format par défaut est celui le plus adapté à la locale.
+        format_date = config.get(
+                'graph_date_format',
+                locale.nl_langinfo(locale.D_T_FMT)
+            ).encode('utf-8')
+
+        # Le caractère ":" est réservé dans rrdtool et doit être échappé.
+        # Le rstrip() permet de supprimer un espace présent en trop à la fin
+        # du texte, lié à l'absence de fuseau horaire et à la présence du
+        # format %Z par défaut dans la plupart des locales.
+        start_date = datetime.datetime.utcfromtimestamp(
+            start_i).strftime(format_date).replace(':', '\\:').rstrip()
+        end_date = datetime.datetime.utcfromtimestamp(
+            end_i).strftime(format_date).replace(':', '\\:').rstrip()
+        a.append(
+            (
+                'COMMENT:' + (_('From "%(start)s" to "%(end)s"') % {
+                    # @FIXME: l'encodage ne devrait pas être hard-codé.
+                    'start': start_date.decode('iso-8859-15'),
+                    'end': end_date.decode('iso-8859-15'),
+                }) + '\\c'
+            ).encode('utf-8')
+        )
+        a.append("COMMENT:  \\n")
+
         # Tabs (legend)
         s = "COMMENT:%s" % _("value").ljust(justify+3)
         for tab in template["tabs"]:
@@ -621,24 +677,6 @@ class RRD(object):
         a = [str(e) for e in a]
         LOGGER.debug("rrdtool graph '%s'" % "' '".join(a))
 
-        try:
-            lang = request.accept_language.best_matches()
-        except TypeError:
-            # Lorsque le thread n'a pas de "request" associée
-            # (ex: dans les tests unitaires), TypeError est levée.
-            lang = None
-
-        if lang:
-            selected_locale = lang[0].replace('-', '_')
-            LOGGER.debug(u"Trying to set rrdtool's locale to %s" %
-                selected_locale)
-            # D'après plusieurs posts sur internet, rrdtool
-            # ne fonctionne qu'avec les locales utilisant UTF-8.
-            # De plus, LC_ALL a la priorité sur LC_TIME,
-            # il faut donc s'en débarrasser.
-            if 'LC_ALL' in os.environ:
-                del os.environ['LC_ALL']
-            os.environ['LC_TIME'] = selected_locale
         rrdtool.graph(*a)
 
     def get_graph_cmd_for_ds(self, d, i, template, is_max=False, justify=18):
