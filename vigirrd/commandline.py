@@ -7,7 +7,7 @@
 import os
 import time
 import logging
-logging.basicConfig(level=logging.DEBUG)
+import logging.config
 
 from tg import config
 from paste.deploy import appconfig
@@ -19,9 +19,10 @@ LOGGER = logging.getLogger(__name__)
 
 
 def load_conf():
-    LOGGER.info("Loading the configuration")
     conf_file = os.getenv("VIGILO_SETTINGS",
                           "/etc/vigilo/vigirrd/settings.ini")
+    logging.config.fileConfig(conf_file)
+    LOGGER.info("Loading the configuration")
     # Chargement de la configuration de VigiRRD
     conf = appconfig("config:%s#main" % conf_file)
     load_environment(conf.global_conf, conf.local_conf)
