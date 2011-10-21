@@ -69,7 +69,7 @@ class RootController(BaseController):
 
         host = kwargs["host"]
         if "graphtemplate" not in kwargs:
-            return redirect('/graphs?host=%s' % host)
+            return redirect('/graphs', host_=host)
 
         if "start" in kwargs:
             start = int(kwargs["start"])

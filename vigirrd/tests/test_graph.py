@@ -24,22 +24,12 @@ class TestGraph(TestController):
             status=404,
         )
 
-#    def test_graph_nominal_html(self):
-#        """Récupération de 'lastvalue' : cas nominal"""
-#        response = self.app.get(
-#            '/lastvalue?host=%s&ds=%s' % (
-#                'testserver',
-#                'sysUpTime',
-#            ),
-#        )
-#        self.assertEqual(response.json['lastvalue'], 254241.38667000001)
-
-#    def test_graph_nominal_image(self):
-#        """Récupération de 'lastvalue' : cas nominal"""
-#        response = self.app.get(
-#            '/lastvalue?host=%s&ds=%s' % (
-#                'testserver',
-#                'sysUpTime',
-#            ),
-#        )
-#        self.assertEqual(response.json['lastvalue'], 254241.38667000001)
+    def test_graph_nominal_html(self):
+        """Récupération de 'lastvalue' : cas nominal"""
+        response = self.app.get(
+            '/lastvalue?host=%s&ds=%s' % (
+                'testserver',
+                'sysUpTime',
+            ),
+        )
+        self.assertTrue('lastvalue' in response.json)

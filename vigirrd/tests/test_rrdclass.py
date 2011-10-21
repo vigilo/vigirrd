@@ -100,13 +100,6 @@ class TestRRDclass(TestController):
             # du système. On se contente donc de vérifier l'existence
             # du graphe.
             self.assertTrue(os.path.exists(tmpfile))
-
-            # Ancien code:
-#            if os.path.exists(tmpfile):
-#                # Comparaison du graphe généré avec le graphe de référence.
-#                result = filecmp.cmp(tmpfile, graphfile)
-#            self.assertEqual(result, True, "The generated graph is different "
-#                "(%s vs. %s)" % (tmpfile, graphfile))
         finally:
             shutil.rmtree(tmpdir)
 
@@ -120,8 +113,6 @@ class TestRRDclass(TestController):
 
     def test_exportCSV(self):
         '''Export des données au format CSV.'''
-
-
         server = 'testserver'
         graphtemplate = 'UpTime'
         indicator = 'All'

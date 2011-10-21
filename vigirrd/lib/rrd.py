@@ -208,9 +208,11 @@ def exportCSV(server, graphtemplate, ds, start, end):
     # Si l'indicateur est All ou n'existe pas pour cet hôte,
     # tous les indicateurs sont pris en compte.
     if not ds or ds.lower() == "all":
-        ds_list = [pds.name for pds in graph.perfdatasources]
-    elif isinstance(ds, basestring):
-        ds_list = [ds]
+        ds_list = [pds.name.encode('utf-8') for pds in graph.perfdatasources]
+    elif isinstance(ds, unicode):
+        ds_list = [ds.encode('utf-8')]
+    else:
+        ds_list = [str(ds)]
 
     ds_map = {}
     for ds in ds_list:
@@ -674,7 +676,7 @@ class RRD(object):
             a.extend(self.get_graph_cmd_for_ds(d, i, template, is_max, justify))
 
         # rrdtool.graph() ne sait manipuler que le type <str>.
-        a = [str(e) for e in a]
+        a = [isinstance(e, unicode) and e.encode('utf-8') or str(e) for e in a]
         LOGGER.debug("rrdtool graph '%s'" % "' '".join(a))
 
         rrdtool.graph(*a)
