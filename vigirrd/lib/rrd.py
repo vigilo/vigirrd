@@ -637,9 +637,9 @@ class RRD(object):
         # Le rstrip() permet de supprimer un espace présent en trop à la fin
         # du texte, lié à l'absence de fuseau horaire et à la présence du
         # format %Z par défaut dans la plupart des locales.
-        start_date = datetime.datetime.utcfromtimestamp(
+        start_date = datetime.datetime.fromtimestamp(
             start_i).strftime(format_date).replace(':', '\\:').rstrip()
-        end_date = datetime.datetime.utcfromtimestamp(
+        end_date = datetime.datetime.fromtimestamp(
             end_i).strftime(format_date).replace(':', '\\:').rstrip()
         a.append(
             (
