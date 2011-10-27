@@ -1,7 +1,8 @@
 NAME := vigirrd
 
 SUBST_FILES := deployment/logrotate.conf deployment/settings.ini \
-               deployment/vigirrd.conf deployment/vigirrd.wsgi
+               deployment/vigirrd.conf deployment/vigirrd.wsgi \
+			   deployment/vigirrd.cron
 
 all: build
 build: $(SUBST_FILES)
@@ -11,7 +12,8 @@ MODULE := $(NAME)
 
 deployment/%: deployment/%.in
 	sed -e 's,@SYSCONFDIR@,$(SYSCONFDIR),g' \
-        -e 's,@LOCALSTATEDIR@,$(LOCALSTATEDIR),g' $^ > $@
+        -e 's,@LOCALSTATEDIR@,$(LOCALSTATEDIR),g' \
+        -e 's,@HTTPD_USER@,$(HTTPD_USER),g' $^ > $@
 
 install: build install_python install_data
 install_pkg: build install_python_pkg install_data

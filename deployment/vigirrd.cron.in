@@ -1,0 +1,2 @@
+# Remove old cached graphs
+*/5 * * * *	@HTTPD_USER@	vigirrd-cleanup-cache
