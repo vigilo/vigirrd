@@ -1,2 +1,2 @@
 # Remove old cached graphs
-*/5 * * * *	root	vigirrd-cleanup-cache
+*/5 * * * *	apache	vigirrd-cleanup-cache
