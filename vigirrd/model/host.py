@@ -14,8 +14,11 @@ from vigirrd.model import DeclarativeBase, DBSession
 
 
 class Host(DeclarativeBase):
+    """
+    Un hôte supervisé
+    """
     __tablename__ = 'host'
-    
+
     idhost = Column(Integer, primary_key=True, autoincrement=True)
     name = Column(Unicode(255), index=True, nullable=False, unique=True)
     grid = Column(Unicode(64), nullable=False,

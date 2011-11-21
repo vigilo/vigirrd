@@ -42,3 +42,4 @@ def init_model(engine):
 from vigirrd.model.host import Host
 from vigirrd.model.graph import Graph
 from vigirrd.model.perfdatasource import PerfDataSource
+from vigirrd.model.cdef import Cdef

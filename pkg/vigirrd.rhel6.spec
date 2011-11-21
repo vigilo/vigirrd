@@ -18,6 +18,7 @@ Requires:   python-distribute
 Requires:   vigilo-turbogears
 Requires:   rrdtool-python >= 1.3
 Requires:   python-simplejson
+Requires:   python-networkx
 Requires:   mod_wsgi
 
 # For the api doc generation

@@ -24,6 +24,7 @@ Requires:   python26-distribute
 Requires:   vigilo-turbogears
 Requires:   rrdtool-python26 >= 1.3
 Requires:   python26-simplejson
+Requires:   python26-networkx
 Requires:   dejavu-lgc-fonts
 Requires:   python26-mod_wsgi
 

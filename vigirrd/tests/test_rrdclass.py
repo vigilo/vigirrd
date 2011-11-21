@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+# vim:set expandtab tabstop=4 shiftwidth=4:
 # pylint: disable-msg=C0111,R0904
 # Copyright (C) 2006-2011 CS-SI
 # License: GNU GPL v2 <http://www.gnu.org/licenses/gpl-2.0.html>
@@ -6,8 +7,11 @@
 import os
 import tempfile
 import shutil
+from unittest import TestCase
 
+import networkx as nx
 import tg
+from vigilo.common import get_rrd_path
 from vigirrd import model
 from vigirrd.lib import rrd, conffile
 from vigirrd.tests import TestController
@@ -136,4 +140,112 @@ class TestRRDclass(TestController):
         normalized_output = output.replace("\r\n", "\n")
         self.assertEqual(csv_data, normalized_output)
 
-# vim:set expandtab tabstop=4 shiftwidth=4:
+
+
+class SortDSTestCase(TestController):
+    """
+    Tri d'une liste de définitions de RRD (fonction RRD._sort_defs())
+    """
+
+    def setUp(self):
+        # Loading the application:
+        super(SortDSTestCase, self).setUp()
+
+        # spécifique VigiRRD
+        conffile.reload()
+        rrdfilename = get_rrd_path("testserver", "sysUpTime",
+                                   base_dir=tg.config['rrd_base'],
+                                   path_mode=tg.config["rrd_path_mode"])
+        rrdfilenames = {
+            "DS1": rrdfilename,
+            "DS2": rrdfilename,
+        }
+        self.rrd = rrd.RRD(rrdfilenames, "testserver")
+        self.template = {"cdefs": [], "draw":
+                    [{ "type": "LINE1", "color": "#EE0088" },
+                     { "type": "LINE1", "color": "#FF5500" }],
+               }
+
+    def tearDown(self):
+        super(SortDSTestCase, self).tearDown()
+
+    def _get_sorted_defs(self, ds_list):
+        defs = []
+        for i in range(len(ds_list)):
+            defs.extend(self.rrd.get_def(ds_list, i, self.template))
+        print "defs:", defs
+        sorted_defs = self.rrd._sort_defs(defs, ds_list)
+        print "sorted:", sorted_defs
+        return sorted_defs
+
+    def test_no_deps(self):
+        "Tri: DEF avant CDEF"
+        ds1 = model.PerfDataSource(name="DS1", factor=1)
+        ds2 = model.PerfDataSource(name="DS2", factor=1)
+        ds_list = [ds1, ds2]
+        sorted_defs = self._get_sorted_defs(ds_list)
+        keys = [ d.split("=")[0] for d in sorted_defs ]
+        expected = ['DEF:data_0_orig', 'DEF:data_1_orig',
+                    'CDEF:data_1', 'CDEF:data_0']
+        self.assertEqual(keys, expected)
+
+    def test_internal_deps(self):
+        """
+        Tri sur une liste avec dépendance sur un autre DS de la liste
+        """
+        ds1 = model.PerfDataSource(name="DS1", factor=1)
+        ds2 = model.PerfDataSource(name="DS2", factor=1)
+        cdef1 = model.Cdef(name="DS1", cdef="DS2,8,*")
+        self.template["cdefs"] = [cdef1]
+        ds_list = [ds1, ds2]
+        sorted_defs = self._get_sorted_defs(ds_list)
+        keys = [ d.split("=")[0] for d in sorted_defs ]
+        expected = ['DEF:data_1_orig', 'CDEF:data_1',
+                    'CDEF:data_0_orig', 'CDEF:data_0']
+        self.assertEqual(keys, expected)
+
+    def test_external_deps(self):
+        """
+        Tri sur une liste avec dépendance sur un DS hors de la liste
+        """
+        ds1 = model.PerfDataSource(name="DS1", factor=1)
+        cdef1 = model.Cdef(name="DS1", cdef="DS2,8,*")
+        self.template["cdefs"] = [cdef1]
+        ds_list = [ds1]
+        sorted_defs = self._get_sorted_defs(ds_list)
+        keys = [ d.split("=")[0] for d in sorted_defs ]
+        expected = ['DEF:data_0_source', 'CDEF:data_0_orig', 'CDEF:data_0']
+        self.assertEqual(keys, expected)
+        # on vérifie qu'il a bien généré le DEF pour la source non affichée
+        self.assertTrue(sorted_defs[0].endswith("testserver/DS2.rrd:DS:AVERAGE"))
+
+    def test_internal_and_external_deps(self):
+        """
+        Tri sur une liste avec dépendances internes et externes
+        """
+        # Comme le test ucd/RAM
+        ds1 = model.PerfDataSource(name="DS1", factor=1)
+        ds2 = model.PerfDataSource(name="DS2", factor=1)
+        ds3 = model.PerfDataSource(name="DS3", factor=1)
+        cdef1 = model.Cdef(name="DS1", cdef="DS2,8,*")
+        cdef2 = model.Cdef(name="DS3", cdef="DS4,DS2,-,DS1,-")
+        self.template["cdefs"] = [cdef1, cdef2]
+        ds_list = [ds3, ds1, ds2]
+        sorted_defs = self._get_sorted_defs(ds_list)
+        keys = [ d.split("=")[0] for d in sorted_defs ]
+        expected = ['DEF:data_2_orig', 'CDEF:data_2',
+                    'CDEF:data_1_orig', 'CDEF:data_1',
+                    'DEF:data_0_source', 'CDEF:data_0_orig', 'CDEF:data_0']
+        self.assertEqual(keys, expected)
+
+    def test_cycle(self):
+        """
+        Détection d'un cycle dans les dépendances de la liste
+        """
+        # Comme le test ucd/RAM
+        ds1 = model.PerfDataSource(name="DS1", factor=1)
+        cdef1 = model.Cdef(name="DS1", cdef="DS1,8,*")
+        self.template["cdefs"] = [cdef1]
+        ds_list = [ds1]
+        self.assertRaises(nx.NetworkXUnfeasible, self._get_sorted_defs, ds_list)
+

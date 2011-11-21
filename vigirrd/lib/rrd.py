@@ -39,6 +39,7 @@ from cStringIO import StringIO
 from logging import getLogger
 LOGGER = getLogger(__name__)
 
+import networkx as nx
 from tg import config, request
 from pylons.i18n import ugettext as _
 from paste.deploy.converters import asbool
@@ -46,7 +47,7 @@ from paste.deploy.converters import asbool
 from vigilo.common import get_rrd_path
 
 from vigirrd.lib import conffile
-from vigirrd.model import DBSession, Host, Graph, PerfDataSource
+from vigirrd.model import DBSession, Host, Graph, PerfDataSource, Cdef
 from vigirrd.model.secondary_tables import GRAPH_PERFDATASOURCE_TABLE
 
 
@@ -146,6 +147,11 @@ def showMergedRRDs(server, template_name, outfile='-',
     template["name"] = template_name
     template["vlabel"] = graph.vlabel
     template["last_is_max"] = graph.lastismax
+    template["cdefs"] = graph.cdefs
+    if graph.min is not None:
+        template["min"] = graph.min
+    if graph.max is not None:
+        template["max"] = graph.max
     ds_map = {}
     ds_list = graph.perfdatasources
     for ds in ds_list:
@@ -516,6 +522,28 @@ class RRD(object):
 
     def graph(self, template, ds_list, outfile="-", format='PNG',
               start=0, duration=0, details=True, lazy=True):
+        """
+        Génère un graphe pour le RRD et les paramètres demandés.
+
+        @param template: modèle graphique de génération, pris dans le fichier
+            de configuration template.py et complété avec les valeurs trouvées
+            en base de données (voir fonction L{showMergedRRDs}).
+        @type  template: C{dict}
+        @param ds_list: liste d'objets PerfDataSource à grapher.
+        @type  ds_list: C{list}
+        @param outfile: chemin du fichier où générer le graphe
+        @type  outfile: C{str}
+        @param format: format d'image, doit être géré par rrdtool
+        @type  format: C{str}
+        @param start: timestamp de début du graphe
+        @type  start: C{int}
+        @oaram duration: durée représentée
+        @type  duration: C{int}
+        @param details: affichage du titre et de la légende
+        @type  details: C{bool}
+        @param lazy: voir le paramètre C{lazy} de rrdtool
+        @type  lazy: C{bool}
+        """
         if outfile != "-":
             imgdir = os.path.dirname(outfile)
             if not os.path.exists(imgdir):
@@ -587,7 +615,11 @@ class RRD(object):
                 "--end", str(end_i),
                 "--imgformat", format,
         ]
-        if template.has_key("options"):
+        if "min" in template:
+            a.extend(["-l", str(template["min"])])
+        if "max" in template:
+            a.extend(["-u", str(template["max"])])
+        if "options" in template:
             for option in template["options"]:
                 a.append(option)
 
@@ -667,6 +699,19 @@ class RRD(object):
 
         a.append(str(s)+"\\n")
 
+        defs = []
+        for i in range(len(ds_list)):
+            defs.extend(self.get_def(ds_list, i, template))
+        try:
+            defs = self._sort_defs(defs, ds_list)
+        except nx.NetworkXUnfeasible, e:
+            try:
+                error_message = unicode(e)
+            except UnicodeDecodeError:
+                error_message = unicode(str(e), 'utf-8', 'replace')
+            LOGGER.error(_("Can't sort DS dependencies"))
+        a.extend(defs)
+
         for i, d in enumerate(ds_list):
             if "last_is_max" in template and template["last_is_max"] \
                     and i == len(ds_list)-1:
@@ -681,9 +726,51 @@ class RRD(object):
 
         rrdtool.graph(*a)
 
-    def get_graph_cmd_for_ds(self, d, i, template, is_max=False, justify=18):
-        cmd = []
+    def _sort_defs(self, defs, ds_list):
+        """
+        Tri des définitions (DEF et CDEF) en fonction de leur dépendance les
+        unes sur les autres.
 
+        @param defs: définitions de variable (syntaxe rrdtool)
+        @type  defs: C{list}
+        @param ds_list: liste complète d'objets PerfDataSource à afficher sur
+            le graphe
+        @type  ds_list: C{list}
+        @rtype: C{list}
+        """
+        graph = nx.DiGraph()
+        for d in defs:
+            ctype = d.split(":")[0]
+            name = d.split(":")[1].split("=")[0]
+            graph.add_node(name, d=d)
+            if ctype == "CDEF":
+                formula = d.split(":")[1].split("=")[1]
+                for cmd in formula.split(","):
+                    if not cmd.startswith("data_"):
+                        continue
+                    graph.add_edge(name, cmd)
+        nodes = nx.algorithms.dag.topological_sort(graph)
+        if nodes is None: # compatibilité networkx < 1.3
+            # message non traduit pour être aussi compatible que possible
+            raise nx.NetworkXUnfeasible("Graph contains a cycle.")
+        nodes.reverse()
+        return [ graph.node[n]["d"] for n in nodes ]
+
+    def get_params(self, i, template, is_max=False):
+        """
+        Retourne les paramètres graphiques pour la PDS à l'index L{i}, en
+        fonction du modèle et du paramètre.
+
+        @param i: index courant dans L{ds_list}
+        @type  i: C{int}
+        @param template: modèle graphique de génération, transmis par la
+            fonction L{graph}
+        @type  template: C{dict}
+        @param is_max: traiter cette PDS comme la limite maximum du graphe
+        @type  is_max: C{bool}
+        @rtype: C{dict}
+
+        """
         if is_max:
             # C'est le max, on fait juste un trait noir
             params = { "type": "LINE1", "color": "#000000", "stack": False }
@@ -695,33 +782,120 @@ class RRD(object):
             else:
                 # ...else just use the first params.
                 params = template["draw"][0]
+        return params
+
+    def get_def(self, ds_list, i, template):
+        """
+        Génère un indicateur consolidé "<ds>_orig" correspondant
+        à la valeur moyenne sur la période et le pas considérés.
+
+        @param ds_list: liste complète d'objets PerfDataSource à afficher sur
+            le graphe
+        @type  ds_list: C{list}
+        @param i: index courant dans L{ds_list}
+        @type  i: C{int}
+        @param template: modèle graphique de génération, transmis par la
+            fonction L{graph}
+        @type  template: C{dict}
+        """
+        cdef = [ c for c in template["cdefs"] if c.name == ds_list[i].name ]
+        if cdef:
+            cmds = self.get_cdef(cdef[0], ds_list, i)
+        else:
+            cmds = self.get_ds_def(ds_list, i)
+
+        # Remplace l'indicateur "<ds>" par la valeur de "<ds>_orig"
+        # générée précédemment, en lui appliquant le facteur approprié.
+        factor = 1
+        params = self.get_params(i, template)
+        if params.has_key("invert") and params["invert"]:
+            factor = -1
+        if ds_list[i].factor != 1:
+            factor = factor * ds_list[i].factor
+        cmds.append("CDEF:data_%s=data_%s_orig,%1.10f,*" % (i, i, factor))
+
+        return cmds
+
+    def get_cdef(self, cdef, ds_list, i):
+        """
+        Retourne la partie de la commande RRD concernant la définition des
+        valeurs à grapher (CDEFs, et valeurs après application du facteur
+        défini dans la conf).
+
+        @param cdef: objet Cdef à considérer
+        @type  cdef: L{Cdef}
+        @param ds_list: liste complète d'objets PerfDataSource à afficher sur
+            le graphe
+        @type  ds_list: C{list}
+        @param i: index courant dans L{ds_list}
+        @type  i: C{int}
+        """
+        result = []
+        cmd_list = cdef.cdef.split(",")
+        for cmd_index, cmd in enumerate(cmd_list):
+            if len(cmd) == 1:
+                continue # c'est un opérateur
+            ds_names = [ ds.name for ds in ds_list ]
+            if cmd in ds_names:
+                cmd_list[cmd_index] = "data_%d" % ds_names.index(cmd)
+            else: # c'est un autre RRD, pas sur ce graphe
+                rrd_path_mode = config.get("rrd_path_mode", "flat")
+                rrdfile = get_rrd_path(self.server, cmd,
+                                       base_dir=config['rrd_base'],
+                                       path_mode=rrd_path_mode)
+                result.append("DEF:data_%s_source=%s:DS:AVERAGE" % (i, rrdfile))
+                cmd_list[cmd_index] = "data_%d_source" % i
+        result.append("CDEF:data_%s_orig=%s" % (i, ",".join(cmd_list)))
+        return result
+
+    def get_ds_def(self, ds_list, i):
+        """
+        Retourne la partie de la commande RRD concernant la définition des
+        fichiers RRD source.
+
+        @param ds_list: liste complète d'objets PerfDataSource à afficher sur
+            le graphe
+        @type  ds_list: C{list}
+        @param i: index courant dans L{ds_list}
+        @type  i: C{int}
+        @rtype: C{list}
+        """
+        if isinstance(self.filename, dict):
+            rrdfile = self.filename[ds_list[i].name]
+        else:
+            rrdfile = self.filename
+        if not os.path.exists(rrdfile):
+            raise RRDNotFoundError(rrdfile)
+        return [ "DEF:data_%s_orig=%s:DS:AVERAGE" % (i, rrdfile) ]
+
+    def get_graph_cmd_for_ds(self, d, i, template, is_max=False, justify=18):
+        """
+        Retourne la partie de la commande RRD concernant la génération du
+        graphe.
+
+        @param d: objet PerfDataSource à considérer
+        @type  d: L{PerfDataSource}
+        @param i: index courant dans L{ds_list}
+        @type  i: C{int}
+        @param template: modèle graphique de génération, transmis par la
+            fonction L{graph}
+        @type  template: C{dict}
+        @param is_max: traiter cette PDS comme la limite maximum du graphe
+        @type  is_max: C{bool}
+        @param justify: nombre de caractères pour la justification de la
+            légende
+        @type  justify: C{int}
+        @rtype: C{list}
+        """
+        cmd = []
+
+        params = self.get_params(i, template, is_max)
         # If we have a nicer label, use it
         label = d.label
         if not label:
             label = d.name
-        # Find the required factor
-        factor = 1
-        if params.has_key("invert") and params["invert"]:
-            factor = -1
-        if d.factor != 1:
-            factor = factor * d.factor
 
-        if isinstance(self.filename, dict):
-            rrdfile = self.filename[d.name]
-        else:
-            rrdfile = self.filename
-        dsname = "DS"
-        if not os.path.exists(rrdfile):
-            raise RRDNotFoundError(rrdfile)
-
-        # Génère un indicateur consolidé "<ds>_orig" correspondant
-        # à la valeur moyenne sur la période et le pas considérés.
-        cmd.append("DEF:%s_orig=%s:%s:AVERAGE" % (i, rrdfile, dsname))
-        # Remplace l'indicateur "<ds>" par la valeur de "<ds>_orig"
-        # généré précédemment, en lui appliquant le facteur approprié.
-        cmd.append("CDEF:%s=%s_orig,%1.10f,*" % (i, i, factor))
-
-        graphline = "%s:%s%s:%s" % (params["type"], i, params["color"], \
+        graphline = "%s:data_%s%s:%s" % (params["type"], i, params["color"], \
             label.replace('\\', '\\\\').replace(':', '\\:').ljust(justify))
 #            LOGGER.debug("params=%s, has_key=%d" %
 #                (params, params.has_key("stack")))
@@ -730,10 +904,10 @@ class RRD(object):
 #                LOGGER.debug("added + :STACK to %s"%graphline)
         cmd.append(graphline)
         if is_max:
-            cmd.append("GPRINT:%s:LAST:%s\\n" % (i, "%4.0lf%s"))
+            cmd.append("GPRINT:data_%s:LAST:%s\\n" % (i, "%4.0lf%s"))
         else:
             for tab in template["tabs"]:
-                cmd.append("GPRINT:%s:%s:%s" % (i, tab, "%4.0lf%s"))
+                cmd.append("GPRINT:data_%s:%s:%s" % (i, tab, "%4.0lf%s"))
             cmd[-1] = cmd[-1] + "\\n"
         return cmd
 
@@ -777,3 +951,10 @@ class RRD(object):
         if factor is None:
             factor = 1
         return lastValue * factor
+
+
+# Monkey-patching pour la compatibilité networkx < 1.3
+class NetworkXUnfeasible(nx.NetworkXException):
+    pass
+if not hasattr(nx, "NetworkXUnfeasible"):
+    setattr(nx, "NetworkXUnfeasible", NetworkXUnfeasible)

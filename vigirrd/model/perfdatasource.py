@@ -15,13 +15,12 @@ from vigirrd.model.secondary_tables import GRAPH_PERFDATASOURCE_TABLE
 
 
 class PerfDataSource(DeclarativeBase):
+    """
+    Une source de données de performance
+    """
     __tablename__ = 'perfdatasource'
-    
+
     idperfdatasource = Column(Integer, primary_key=True, autoincrement=True)
-    #idgraph = Column(Integer, 
-    #                 ForeignKey(Graph.idgraph),
-    #                 autoincrement=True)
-    #graph = relation('Graph', back_populates="perfdatasources", lazy=True)
     name = Column(UnicodeText, index=True, nullable=False)
     label = Column(UnicodeText, nullable=True)
     factor = Column(Float(precision=None, asdecimal=False),

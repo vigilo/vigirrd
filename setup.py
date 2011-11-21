@@ -29,6 +29,7 @@ setup(
         "vigilo-turbogears",
         "py-rrdtool",
         "simplejson",
+        "networkx",
     ],
     zip_safe=False, # pour pouvoir déplacer app_cfg.py
     paster_plugins=['PasteScript', 'Pylons', 'TurboGears2', 'tg.devtools'],

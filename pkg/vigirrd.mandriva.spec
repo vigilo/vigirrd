@@ -19,6 +19,7 @@ Requires:   python-setuptools
 Requires:   vigilo-turbogears
 Requires:   python-rrdtool >= 1.3
 Requires:   python-simplejson
+Requires:   python-networkx
 Requires:   fonts-ttf-dejavu
 Requires:   apache-mod_wsgi
 
