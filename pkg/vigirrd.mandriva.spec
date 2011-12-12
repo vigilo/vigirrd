@@ -19,7 +19,6 @@ Requires:   python-setuptools
 Requires:   vigilo-turbogears
 Requires:   python-rrdtool >= 1.3
 Requires:   python-simplejson
-Requires:   python-networkx
 Requires:   fonts-ttf-dejavu
 Requires:   apache-mod_wsgi
 
@@ -155,4 +154,3 @@ rm -rf $RPM_BUILD_ROOT
 %attr(750,apache,apache) %dir %{_localstatedir}/cache/vigilo/vigirrd/img
 %attr(750,vigiconf,apache) %dir %{_localstatedir}/cache/vigilo/vigirrd/db
 %{python_sitelib}/*
-

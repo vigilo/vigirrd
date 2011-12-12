@@ -39,7 +39,7 @@ from cStringIO import StringIO
 from logging import getLogger
 LOGGER = getLogger(__name__)
 
-import networkx as nx
+from vigilo.common.nx import networkx as nx
 from tg import config, request
 from pylons.i18n import ugettext as _
 from paste.deploy.converters import asbool
@@ -951,10 +951,3 @@ class RRD(object):
         if factor is None:
             factor = 1
         return lastValue * factor
-
-
-# Monkey-patching pour la compatibilité networkx < 1.3
-class NetworkXUnfeasible(nx.NetworkXException):
-    pass
-if not hasattr(nx, "NetworkXUnfeasible"):
-    setattr(nx, "NetworkXUnfeasible", NetworkXUnfeasible)

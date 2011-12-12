@@ -18,7 +18,6 @@ Requires:   python-distribute
 Requires:   vigilo-turbogears
 Requires:   rrdtool-python >= 1.3
 Requires:   python-simplejson
-Requires:   python-networkx
 Requires:   mod_wsgi
 
 # For the api doc generation
@@ -89,4 +88,3 @@ rm -rf $RPM_BUILD_ROOT
 %attr(750,apache,apache) %dir %{_localstatedir}/cache/vigilo/vigirrd/img
 %attr(750,vigiconf,apache) %dir %{_localstatedir}/cache/vigilo/vigirrd/db
 %{python_sitelib}/*
-

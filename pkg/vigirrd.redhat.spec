@@ -24,7 +24,6 @@ Requires:   python26-distribute
 Requires:   vigilo-turbogears
 Requires:   rrdtool-python26 >= 1.3
 Requires:   python26-simplejson
-Requires:   python26-networkx
 Requires:   dejavu-lgc-fonts
 Requires:   python26-mod_wsgi
 
@@ -98,4 +97,3 @@ rm -rf $RPM_BUILD_ROOT
 %attr(750,apache,apache) %dir %{_localstatedir}/cache/vigilo/vigirrd/img
 %attr(750,vigiconf,apache) %dir %{_localstatedir}/cache/vigilo/vigirrd/db
 %{python26_sitelib}/*
-
