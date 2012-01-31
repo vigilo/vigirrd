@@ -22,7 +22,7 @@ def load_conf():
     conf_file = os.getenv("VIGILO_SETTINGS",
                           "/etc/vigilo/vigirrd/settings.ini")
     logging.config.fileConfig(conf_file)
-    LOGGER.info("Loading the configuration")
+    LOGGER.debug("Loading the configuration")
     # Chargement de la configuration de VigiRRD
     conf = appconfig("config:%s#main" % conf_file)
     load_environment(conf.global_conf, conf.local_conf)
