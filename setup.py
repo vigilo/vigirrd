@@ -18,7 +18,7 @@ sysconfdir = os.getenv("SYSCONFDIR", "/etc")
 
 setup(
     name='vigilo-vigirrd',
-    version='2.0.13',
+    version='2.0.14',
     author='Vigilo Team',
     author_email='contact@projet-vigilo.org',
     url='http://www.projet-vigilo.org/',
