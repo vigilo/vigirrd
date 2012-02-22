@@ -239,6 +239,12 @@ class RootController(BaseController):
             filename = rrd.getExportFileName(host, ds, start, end)
         else:
             filename = rrd.getExportFileName(host, graphtemplate, start, end)
+
+        # Sans les 2 en-têtes suivants qui désactivent la mise en cache,
+        # Internet Explorer refuse de télécharger le fichier CSV (cf. #961).
+        response.headers['Pragma'] = 'public'           # Nécessaire pour IE.
+        response.headers['Cache-Control'] = 'max-age=0' # Nécessaire pour IE.
+
         response.headers['Content-Type'] = 'text/csv'
         response.headers['Content-Disposition'] = \
                         'attachment;filename="%s"' % filename
