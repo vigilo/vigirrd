@@ -144,11 +144,11 @@ rm -rf $RPM_BUILD_ROOT
 %config(noreplace) %{_sysconfdir}/vigilo/%{module}/*.py
 %config(noreplace) %{_sysconfdir}/vigilo/%{module}/*.wsgi
 %config(noreplace) %attr(640,root,apache) %{_sysconfdir}/vigilo/%{module}/*.ini
-%config(noreplace) /etc/httpd/conf/webapps.d/%{module}.conf
+%config(noreplace) /etc/httpd/conf/webapps.d/%{name}.conf
 %config(noreplace) /etc/cron.d/*
 %dir %{_localstatedir}/log/vigilo/
 %attr(750,apache,apache) %{_localstatedir}/log/vigilo/%{module}
-%config(noreplace) /etc/logrotate.d/%{module}
+%config(noreplace) /etc/logrotate.d/%{name}
 %attr(750,apache,apache) %{_localstatedir}/cache/vigilo/sessions
 %attr(750,apache,apache) %dir %{_localstatedir}/cache/vigilo/vigirrd
 %attr(750,apache,apache) %dir %{_localstatedir}/cache/vigilo/vigirrd/img
