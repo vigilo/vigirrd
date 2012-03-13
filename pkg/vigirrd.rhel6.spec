@@ -51,7 +51,7 @@ rm -rf $RPM_BUILD_ROOT
 make install_pkg \
     DESTDIR=$RPM_BUILD_ROOT \
     SYSCONFDIR=%{_sysconfdir} \
-	LOCALSTATEDIR=%{_localstatedir} \
+    LOCALSTATEDIR=%{_localstatedir} \
     PYTHON=%{__python}
 
 make apidoc || :

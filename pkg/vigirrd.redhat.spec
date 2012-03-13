@@ -56,10 +56,10 @@ This application is part of the Vigilo Project <http://vigilo-project.org>
 %install
 rm -rf $RPM_BUILD_ROOT
 make install_pkg \
-	DESTDIR=$RPM_BUILD_ROOT \
-	SYSCONFDIR=%{_sysconfdir} \
-	LOCALSTATEDIR=%{_localstatedir} \
-	PYTHON=%{__python}
+    DESTDIR=$RPM_BUILD_ROOT \
+    SYSCONFDIR=%{_sysconfdir} \
+    LOCALSTATEDIR=%{_localstatedir} \
+    PYTHON=%{__python}
 
 make apidoc || :
 
