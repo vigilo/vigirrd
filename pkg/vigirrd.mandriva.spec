@@ -21,6 +21,7 @@ Requires:   python-rrdtool >= 1.3
 Requires:   python-simplejson
 Requires:   fonts-ttf-dejavu
 Requires:   apache-mod_wsgi
+Requires:   python-pytz
 
 # VigiConf
 Requires:   vigilo-vigiconf-local

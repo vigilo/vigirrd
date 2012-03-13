@@ -19,6 +19,7 @@ Requires:   vigilo-turbogears
 Requires:   rrdtool-python >= 1.3
 Requires:   python-simplejson
 Requires:   mod_wsgi
+Requires:   pytz
 
 # For the api doc generation
 #BuildRequires: epydoc python26-rrdtool

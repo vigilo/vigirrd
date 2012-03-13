@@ -61,4 +61,3 @@ base_config.static_labels = {
     'MAX': 'max',
     'LAST': 'last',
 }
-
