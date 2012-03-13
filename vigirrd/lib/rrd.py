@@ -34,6 +34,7 @@ import datetime
 import csv
 import locale
 import copy
+import babel, pytz
 from cStringIO import StringIO
 
 from logging import getLogger
@@ -128,7 +129,7 @@ def listDS(files):
     return list_l
 
 def showMergedRRDs(server, template_name, outfile='-',
-        start=0, duration=0, details=1):
+        start=0, duration=0, details=1, timezone=0):
     """showMergedRRDs"""
     host = Host.by_name(server)
     if host is None:
@@ -157,8 +158,9 @@ def showMergedRRDs(server, template_name, outfile='-',
     for ds in ds_list:
         ds_map[ds.name] = getEncodedFileName(server, ds.name)
     tmp_rrd = RRD(filename=ds_map, server=server)
-    tmp_rrd.graph(template, ds_list, outfile, start=start, \
-                  duration=duration, details=(int(details)==1))
+    tmp_rrd.graph(template, ds_list, outfile, start=start,
+                  duration=duration, details=(int(details)==1),
+                  timezone=timezone)
 
 def getEncodedFileName(server, ds):
     """
@@ -183,7 +185,7 @@ def getEncodedFileName(server, ds):
     return filename
 
 # VIGILO_EXIG_VIGILO_PERF_0040:Export des donnees d'un graphe au format CSV
-def exportCSV(server, graphtemplate, ds, start, end):
+def exportCSV(server, graphtemplate, ds, start, end, timezone):
     """
     export CSV
 
@@ -203,6 +205,9 @@ def exportCSV(server, graphtemplate, ds, start, end):
     @type start : C{str}
     @param end : fin plage export
     @type end : C{str}
+    @param timezone : Décalage en minutes du fuseau horaire de l'utilisateur
+        (utilisé pour obtenir une représentation textuelle des dates).
+    @type timezone : C{int}
     @return : donnees RRD d apres server, indicateur et plage
     @rtype: dictionnaire
     """
@@ -210,6 +215,7 @@ def exportCSV(server, graphtemplate, ds, start, end):
     # initialisation
     host = Host.by_name(server)
     graph = Graph.by_host_and_name(host, graphtemplate)
+    delta = pytz.FixedOffset(-timezone)
 
     # Si l'indicateur est All ou n'existe pas pour cet hôte,
     # tous les indicateurs sont pris en compte.
@@ -224,7 +230,7 @@ def exportCSV(server, graphtemplate, ds, start, end):
     for ds in ds_list:
         ds_map[ds] = getEncodedFileName(server, ds)
 
-    headers = ['Timestamp']
+    headers = ['Timestamp', 'Date']
     headers.extend(ds_list)
 
     # Construction d'une liste de listes contenant un horodatage
@@ -232,8 +238,9 @@ def exportCSV(server, graphtemplate, ds, start, end):
     # L'horodatage arrive toujours en premier. Ensuite, les valeurs
     # arrivent dans l'ordre des indicateurs donnés dans ds_list.
     result = []
-    format_date = config.get('csv_date_format')
+    format_date = config.get('csv_date_format', "long")
     format_value = asbool(config.get('csv_respect_locale', False))
+    date_locale = 'en_US'
 
     # Au cas où la configuration serait changée dynamiquement.
     if not format_value:
@@ -259,6 +266,7 @@ def exportCSV(server, graphtemplate, ds, start, end):
             else:
                 LOGGER.debug(u"Preparing to format CSV values, "
                             "using locale %r" % tentative_lang)
+                date_locale = tentative_lang
                 break
 
     for ds in ds_list:
@@ -276,15 +284,19 @@ def exportCSV(server, graphtemplate, ds, start, end):
             # c'est qu'il s'agit du premier indicateur que l'on traite.
             # On ajoute donc le timestamp à la liste avant tout.
             if len(result) <= index:
-                # Le timestamp est ajouté, une première fois pour trier
-                # les valeurs ensuite, une seconde fois (potentiellement
-                # formatté) selon le choix de l'administrateur.
-                if format_date is None:
-                    result.append([timestamp, timestamp])
-                else:
-                    date = datetime.datetime.utcfromtimestamp(timestamp
-                        ).strftime(format_date.encode('utf8')).decode('utf8')
-                    result.append([timestamp, date])
+                # Le timestamp est ajouté, une première fois sous forme
+                # d'horodatage UNIX à destination de scripts et une seconde
+                # fois sous forme textuelle à destination des exploitants.
+
+                # 1. On convertit le timestamp depuis UTC vers le fuseau
+                #    horaire donné par le navigateur de l'utilisateur.
+                date = pytz.utc.localize(datetime.datetime.utcfromtimestamp(
+                            timestamp)).astimezone(delta)
+                # 2. On utilise la représentation des dates/heures issue
+                #    de la locale de l'utilisateur (ou "en_US" par défaut).
+                date = babel.dates.format_datetime(date, format_date,
+                            locale=date_locale)
+                result.append([timestamp, date])
 
             # On prépare le format adéquat en fonction du type de la valeur.
             # Le formattage tiendra compte de la locale.
@@ -298,12 +310,11 @@ def exportCSV(server, graphtemplate, ds, start, end):
                 None
             result[index].append(value)
 
-    # On trie les valeurs par timestamp ascendant
-    # et on supprime la 1ère valeur de chaque entrée
-    # qui n'a servi qu'au tri.
+    # On trie les valeurs par horodatage ascendant.
     result = sorted(result, key=lambda r: int(r[0]))
-    result = [r[1:] for r in result]
 
+    # Écriture de l'en-tête, puis des données dans un buffer.
+    # Le contenu final du buffer correspond au fichier CSV exporté.
     buf = StringIO()
     csv_writer = csv.writer(buf,
         delimiter=config.get("csv_delimiter_char", ';'),
@@ -311,12 +322,11 @@ def exportCSV(server, graphtemplate, ds, start, end):
         quotechar=config.get("csv_quote_char", '"'),
         quoting=csv.QUOTE_ALL)
 
-    # Écriture de l'en-tête, puis des données.
     csv_writer.writerow(headers)
     csv_writer.writerows(result)
     return buf.getvalue()
 
-def getExportFileName(host, ds_graph, start, end):
+def getExportFileName(host, ds_graph, start, end, timezone):
     """
     Determination nom fichier pour export
     -> <hote>_<ds_graph>_<date_heure_debut>_<date_heure_fin>
@@ -330,6 +340,10 @@ def getExportFileName(host, ds_graph, start, end):
     @type start : C{str}
     @param end : duree des donnees
     @type end : C{str}
+    @param timezone: décalage en minutes entre l'heure UTC
+        et l'heure dans le fuseau horaire de l'utilisateur
+        (p.ex. 60 = UTC+01).
+    @type timezone: C{int}
 
     @return: nom du fichier
     @rtype: C{str}
@@ -337,11 +351,14 @@ def getExportFileName(host, ds_graph, start, end):
 
     # plage temps sous forme texte
     format = '%Y/%m/%d-%H:%M:%S'
+    delta = pytz.FixedOffset(-timezone)
 
-    dt = datetime.datetime.utcfromtimestamp(int(start))
+    dt = pytz.utc.localize(datetime.datetime.utcfromtimestamp(
+                            int(start))).astimezone(delta)
     str_start = dt.strftime(format)
 
-    dt = datetime.datetime.utcfromtimestamp(int(end))
+    dt = pytz.utc.localize(datetime.datetime.utcfromtimestamp(
+                            int(end))).astimezone(delta)
     str_end = dt.strftime(format)
 
     host = host.encode('utf-8', 'replace')
@@ -521,7 +538,7 @@ class RRD(object):
                 continue
 
     def graph(self, template, ds_list, outfile="-", format='PNG',
-              start=0, duration=0, details=True, lazy=True):
+              start=0, duration=0, details=True, lazy=True, timezone=0):
         """
         Génère un graphe pour le RRD et les paramètres demandés.
 
@@ -543,11 +560,37 @@ class RRD(object):
         @type  details: C{bool}
         @param lazy: voir le paramètre C{lazy} de rrdtool
         @type  lazy: C{bool}
+        @param timezone: décalage en minutes entre l'heure UTC
+            et l'heure dans le fuseau horaire de l'utilisateur
+            (p.ex. 60 = UTC+01).
+        @type timezone: C{int}
         """
         if outfile != "-":
             imgdir = os.path.dirname(outfile)
             if not os.path.exists(imgdir):
                 os.makedirs(imgdir)
+
+        # La variable TZ utilise la convention POSIX
+        # (ie. la direction du temps est inversée).
+        if timezone < 0:
+            # Python suit la définition mathématique de la division
+            # euclidienne et du modulo, ce qui ne nous arrange pas ici.
+            tz_hours = (-timezone) / 60
+            tz_mins  = (-timezone) % 60
+        else:
+            tz_hours = -(timezone / 60)
+            tz_mins  = -(timezone % 60)
+
+        # On positionne TZ à un fuseau horaire
+        # du type "UTC-01" ou encore "UTC+09:30".
+        # Cette variable permet change l'interprétation des horodatages
+        # donnés en entrée pour que rrdtool ajuste les dates/heures.
+        # Méthode non thread-safe, mais c'est la seule reconnue par rrdtool.
+        old_tz = os.environ.get('TZ')
+        os.environ['TZ'] = 'UTC%+03d%s' % (
+            tz_hours,
+            tz_mins and (":%02d" % tz_mins) or ""
+        )
 
         # On choisit la langue qui sera utilisée pour le rendu.
         try:
@@ -725,6 +768,12 @@ class RRD(object):
         LOGGER.debug("rrdtool graph '%s'" % "' '".join(a))
 
         rrdtool.graph(*a)
+        # Restaure la valeur précédente de TZ
+        # (non thread-safe, mais évite de trop polluer Python).
+        if old_tz is None:
+            del os.environ['TZ']
+        else:
+            os.environ['TZ'] = old_tz
 
     def _sort_defs(self, defs, ds_list):
         """

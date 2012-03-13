@@ -126,15 +126,15 @@ class TestRRDclass(TestController):
         end = 1232010000
 
         csv_data = """
-"Timestamp";"sysUpTime"
-"15/01/2009 06:13:21";"9658471.000000"
-"15/01/2009 06:43:21";"9660271.000000"
-"15/01/2009 07:13:21";"9662071.000000"
-"15/01/2009 07:43:21";"9663871.000000"
-"15/01/2009 08:13:21";"9665671.000000"
+"Timestamp";"Date";"sysUpTime"
+"1232000001";"January 15, 2009 6:13:21 AM +0000";"9658471.000000"
+"1232001801";"January 15, 2009 6:43:21 AM +0000";"9660271.000000"
+"1232003601";"January 15, 2009 7:13:21 AM +0000";"9662071.000000"
+"1232005401";"January 15, 2009 7:43:21 AM +0000";"9663871.000000"
+"1232007201";"January 15, 2009 8:13:21 AM +0000";"9665671.000000"
 """[1:]
         output = rrd.exportCSV(server, graphtemplate,
-                        indicator, start, end)
+                        indicator, start, end, 0)
 
         # On compare l'export au résultat attendu.
         normalized_output = output.replace("\r\n", "\n")
@@ -248,4 +248,3 @@ class SortDSTestCase(TestController):
         self.template["cdefs"] = [cdef1]
         ds_list = [ds1]
         self.assertRaises(nx.NetworkXUnfeasible, self._get_sorted_defs, ds_list)
-

@@ -26,6 +26,7 @@ Requires:   rrdtool-python26 >= 1.3
 Requires:   python26-simplejson
 Requires:   dejavu-lgc-fonts
 Requires:   python26-mod_wsgi
+Requires:   python26-pytz
 
 # For the api doc generation
 #BuildRequires: epydoc python26-rrdtool

@@ -133,6 +133,20 @@ class RootController(BaseController):
         except ValueError:
             details = True
 
+        try:
+            timezone = int(kwargs.get('timezone'))
+        except (ValueError, TypeError):
+            # time.timezone utilise la notation POSIX dans laquelle
+            # la direction du temps est inversée
+            # (ie. UTC+01:00 = -3600 secondes).
+            # Note: time.daylight indique juste que la timezone actuelle
+            # supporte le changement d'heure DST, pas qu'il est actif,
+            # il faut recourir à localtime() pour avoir cette information.
+            if time.daylight and time.localtime().tm_isdst:
+                timezone = -time.altzone / 60
+            else:
+                timezone = -time.timezone / 60
+
         # La durée par défaut est de 86400 secondes (1 journée).
         duration = int(kwargs.get("duration", 86400))
         # Si la durée est 0, vigirrd.lib.rrd utilise la date courante
@@ -158,7 +172,8 @@ class RootController(BaseController):
         image_file = os.path.join(config.get("image_cache_dir"), filename)
         try:
             rrd.showMergedRRDs(kwargs["host"], kwargs["graphtemplate"],
-                               image_file, start, duration, details=details)
+                               image_file, start, duration, details=details,
+                               timezone=timezone)
         except rrd.RRDNoDSError, e:
             raise HTTPServiceUnavailable(str(e))
         except rrd.RRDNotFoundError, e:
@@ -197,7 +212,8 @@ class RootController(BaseController):
 
     @expose(content_type=CUSTOM_CONTENT_TYPE)
     def export(self, host, graphtemplate, ds=None,
-        start=None, end=None, nocache=None): # pylint: disable-msg=W0613
+        start=None, end=None, timezone=None,
+        nocache=None): # pylint: disable-msg=W0613
         '''
         export CSV
 
@@ -218,11 +234,34 @@ class RootController(BaseController):
         @type  start: C{str}
         @param end: fin plage export
         @type  end: C{str}
+        @param timezone: décalage en minutes entre l'heure UTC
+            et l'heure dans le fuseau horaire de l'utilisateur
+            (p.ex. 60 = UTC+01).
+        @type  timezone: C{str}
+        @param nocache: Valeur aléatoire (généralement un horodatage UNIX)
+            destinée à empêcher la mise en cache du fichier exporté par le
+            navigateur.
+        @type  nocache: C{str}
         '''
         if not start:
             start = time.time() - 86400 # Par défaut: 24 heures avant
         start = int(start)
         now = int(time.time())
+
+        try:
+            timezone = int(timezone)
+        except (ValueError, TypeError):
+            # time.timezone utilise la notation POSIX dans laquelle
+            # la direction du temps est inversée
+            # (ie. UTC+01:00 = -3600 secondes).
+            # Note: time.daylight indique juste que la timezone actuelle
+            # supporte le changement d'heure DST, pas qu'il est actif,
+            # il faut recourir à localtime() pour avoir cette information.
+            if time.daylight and time.localtime().tm_isdst:
+                timezone = -time.altzone / 60
+            else:
+                timezone = -time.timezone / 60
+
         if start >= now:
             raise HTTPNotFound('No data yet')
         if Host.by_name(host) is None:
@@ -236,9 +275,11 @@ class RootController(BaseController):
             LOGGER.debug("exporting until %d instead of %d" % (now, end))
             end = now
         if ds:
-            filename = rrd.getExportFileName(host, ds, start, end)
+            filename = rrd.getExportFileName(host, ds, start, end,
+                                                timezone=timezone)
         else:
-            filename = rrd.getExportFileName(host, graphtemplate, start, end)
+            filename = rrd.getExportFileName(host, graphtemplate, start, end,
+                                                timezone=timezone)
 
         # Sans les 2 en-têtes suivants qui désactivent la mise en cache,
         # Internet Explorer refuse de télécharger le fichier CSV (cf. #961).
@@ -248,4 +289,4 @@ class RootController(BaseController):
         response.headers['Content-Type'] = 'text/csv'
         response.headers['Content-Disposition'] = \
                         'attachment;filename="%s"' % filename
-        return rrd.exportCSV(host, graphtemplate, ds, start, end)
+        return rrd.exportCSV(host, graphtemplate, ds, start, end, timezone)

@@ -26,6 +26,7 @@ VigiRRD a besoin des modules Python suivants :
 - vigilo-turbogears
 - py-rrdtool
 - simplejson
+- pytz
 
 
 Installation
