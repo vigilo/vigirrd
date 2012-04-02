@@ -40,7 +40,7 @@ from cStringIO import StringIO
 from logging import getLogger
 LOGGER = getLogger(__name__)
 
-from vigilo.common.nx import networkx as nx
+import networkx as nx
 from tg import config, request
 from pylons.i18n import ugettext as _
 from paste.deploy.converters import asbool
@@ -799,9 +799,6 @@ class RRD(object):
                         continue
                     graph.add_edge(name, cmd)
         nodes = nx.algorithms.dag.topological_sort(graph)
-        if nodes is None: # compatibilité networkx < 1.3
-            # message non traduit pour être aussi compatible que possible
-            raise nx.NetworkXUnfeasible("Graph contains a cycle.")
         nodes.reverse()
         return [ graph.node[n]["d"] for n in nodes ]
 
