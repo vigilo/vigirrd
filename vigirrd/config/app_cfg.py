@@ -26,6 +26,12 @@ import vigirrd
 import vigirrd.model
 from vigirrd.lib import app_globals, helpers # pylint: disable-msg=W0611
 
+# Monkey-patch de la fonction dst() pour se conformer
+# à l'API de datetime.tzinfo.utcoffset().
+# Cf. https://bugs.launchpad.net/pytz/+bug/612081 pour plus d'information.
+import pytz
+pytz._FixedOffset.dst = lambda self, dt: pytz.ZERO
+
 
 class VigiRRDConfig(VigiloAppConfig):
     def __init__(self, *args, **kwargs):
