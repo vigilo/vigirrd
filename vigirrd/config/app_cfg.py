@@ -25,6 +25,7 @@ from vigilo.turbogears import VigiloAppConfig
 import vigirrd
 import vigirrd.model
 from vigirrd.lib import app_globals, helpers # pylint: disable-msg=W0611
+# W0611: Unused import: imports nécessaires pour le fonctionnement
 
 # Monkey-patch de la fonction dst() pour se conformer
 # à l'API de datetime.tzinfo.utcoffset().
