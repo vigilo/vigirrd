@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 # pylint: disable-msg=C0103
-# Copyright (C) 2006-2011 CS-SI
+# Copyright (C) 2006-2012 CS-SI
 # License: GNU GPL v2 <http://www.gnu.org/licenses/gpl-2.0.html>
 
 """The application's model objects""" 
