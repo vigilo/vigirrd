@@ -7,7 +7,7 @@ SUBST_FILES := deployment/logrotate.conf deployment/settings.ini \
 all: build
 build: $(SUBST_FILES)
 
-include buildenv/Makefile.common
+include buildenv/Makefile.common.python
 MODULE := $(NAME)
 
 deployment/%: deployment/%.in

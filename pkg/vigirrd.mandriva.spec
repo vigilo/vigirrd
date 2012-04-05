@@ -121,8 +121,6 @@ make install_pkg \
     LOCALSTATEDIR=%{_localstatedir} \
     PYTHON=%{__python}
 
-make apidoc || :
-
 %find_lang %{name}
 
 
