@@ -59,7 +59,7 @@ class VigiRRDConfig(VigiloAppConfig):
         # On revient au comportement par défaut de TG
         AppConfig.setup_sqlalchemy(self)
 
-base_config = VigiRRDConfig('vigirrd')
+base_config = VigiRRDConfig('VigiRRD')
 base_config.package = vigirrd
 
 base_config.mimetype_lookup = {
