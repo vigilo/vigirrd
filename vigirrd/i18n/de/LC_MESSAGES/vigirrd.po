@@ -8,7 +8,7 @@ msgstr ""
 "Project-Id-Version: vigirrd 2.0.0\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
 "POT-Creation-Date: 2010-11-19 14:40+0100\n"
-"PO-Revision-Date: 2011-09-28 17:07+0200\n"
+"PO-Revision-Date: 2012-04-18 17:21+0200\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: de_DE <LL@li.org>\n"
 "Plural-Forms: nplurals=2; plural=(n != 1)\n"
@@ -22,14 +22,18 @@ msgstr ""
 msgid "No access to the rrdcached socket: %s"
 msgstr ""
 
-#: vigirrd/lib/rrd.py:629
+#: vigirrd/lib/rrd.py:723
 #, python-format
 msgid "From \"%(start)s\" to \"%(end)s\""
 msgstr ""
 
-#: vigirrd/lib/rrd.py:641
+#: vigirrd/lib/rrd.py:733
 msgid "value"
 msgstr "Wert"
+
+#: vigirrd/lib/rrd.py:755
+msgid "Can't sort DS dependencies"
+msgstr ""
 
 #: vigirrd/templates/error.html:8
 #, python-format

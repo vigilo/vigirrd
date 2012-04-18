@@ -1,15 +1,15 @@
 # English translations for vigilo-vigirrd.
-# Copyright (C) 2011 ORGANIZATION
+# Copyright (C) 2012 ORGANIZATION
 # This file is distributed under the same license as the vigilo-vigirrd
 # project.
-# FIRST AUTHOR <EMAIL@ADDRESS>, 2011.
+# FIRST AUTHOR <EMAIL@ADDRESS>, 2012.
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: vigilo-vigirrd 2.0.5\n"
+"Project-Id-Version: vigilo-vigirrd 2.0.15\n"
 "Report-Msgid-Bugs-To: contact@projet-vigilo.org\n"
-"POT-Creation-Date: 2011-09-28 17:07+0200\n"
-"PO-Revision-Date: 2011-09-28 17:07+0200\n"
+"POT-Creation-Date: 2012-04-18 17:21+0200\n"
+"PO-Revision-Date: 2012-04-18 17:21+0200\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: en <LL@li.org>\n"
 "Plural-Forms: nplurals=2; plural=(n != 1)\n"
@@ -23,14 +23,18 @@ msgstr ""
 msgid "No access to the rrdcached socket: %s"
 msgstr "No access to the rrdcached socket: %s"
 
-#: vigirrd/lib/rrd.py:629
+#: vigirrd/lib/rrd.py:723
 #, python-format
 msgid "From \"%(start)s\" to \"%(end)s\""
 msgstr "From \"%(start)s\" to \"%(end)s\""
 
-#: vigirrd/lib/rrd.py:641
+#: vigirrd/lib/rrd.py:733
 msgid "value"
 msgstr "value"
+
+#: vigirrd/lib/rrd.py:755
+msgid "Can't sort DS dependencies"
+msgstr "Can't sort DS dependencies"
 
 #: vigirrd/templates/error.html:8
 #, python-format

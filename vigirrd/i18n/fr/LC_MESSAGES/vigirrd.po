@@ -8,7 +8,7 @@ msgstr ""
 "Project-Id-Version: vigirrd 2.0.0\n"
 "Report-Msgid-Bugs-To: contact@projet-vigilo.org\n"
 "POT-Creation-Date: 2010-05-12 11:49+0200\n"
-"PO-Revision-Date: 2011-09-28 17:07+0200\n"
+"PO-Revision-Date: 2012-04-18 17:21+0200\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: fr_FR <LL@li.org>\n"
 "Plural-Forms: nplurals=2; plural=(n > 1)\n"
@@ -22,14 +22,18 @@ msgstr ""
 msgid "No access to the rrdcached socket: %s"
 msgstr "Pas d'accès au socket rrdcached : %s"
 
-#: vigirrd/lib/rrd.py:629
+#: vigirrd/lib/rrd.py:723
 #, python-format
 msgid "From \"%(start)s\" to \"%(end)s\""
 msgstr "Du \"%(start)s\" au \"%(end)s\""
 
-#: vigirrd/lib/rrd.py:641
+#: vigirrd/lib/rrd.py:733
 msgid "value"
 msgstr "valeur"
+
+#: vigirrd/lib/rrd.py:755
+msgid "Can't sort DS dependencies"
+msgstr "Impossible de trier les dépendances des sources de données"
 
 #: vigirrd/templates/error.html:8
 #, python-format
