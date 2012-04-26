@@ -55,6 +55,9 @@ make install_pkg \
     LOCALSTATEDIR=%{_localstatedir} \
     PYTHON=%{__python}
 
+# Pour marquer en %ghost
+touch $RPM_BUILD_ROOT%{python_sitelib}/%{module}/app_cfg.py{c,o}
+
 #%find_lang %{name}
 
 
@@ -87,3 +90,5 @@ rm -rf $RPM_BUILD_ROOT
 %attr(750,apache,apache) %dir %{_localstatedir}/cache/vigilo/vigirrd/img
 %attr(750,vigiconf,apache) %dir %{_localstatedir}/cache/vigilo/vigirrd/db
 %{python_sitelib}/*
+%ghost %{python_sitelib}/%{module}/app_cfg.pyc
+%ghost %{python_sitelib}/%{module}/app_cfg.pyo
