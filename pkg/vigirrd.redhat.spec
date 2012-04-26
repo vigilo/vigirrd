@@ -63,7 +63,7 @@ make install_pkg \
     PYTHON=%{__python}
 
 # Pour marquer en %ghost
-touch $RPM_BUILD_ROOT%{python_sitelib}/%{module}/app_cfg.py{c,o}
+touch $RPM_BUILD_ROOT%{python26_sitelib}/%{module}/config/app_cfg.pyc
 
 #%find_lang %{name}
 
@@ -99,5 +99,4 @@ rm -rf $RPM_BUILD_ROOT
 %attr(750,apache,apache) %dir %{_localstatedir}/cache/vigilo/vigirrd/img
 %attr(750,vigiconf,apache) %dir %{_localstatedir}/cache/vigilo/vigirrd/db
 %{python26_sitelib}/*
-%ghost %{python_sitelib}/%{module}/app_cfg.pyc
-%ghost %{python_sitelib}/%{module}/app_cfg.pyo
+%ghost %{python26_sitelib}/%{module}/config/app_cfg.pyc
