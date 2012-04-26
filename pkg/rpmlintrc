@@ -3,4 +3,6 @@
 from Config import addFilter
 
 addFilter("W: unexpanded-macro /usr/lib/python2.\d/site-packages/vigirrd/tests/testdata")
-addFilter("W: non-standard-dir-perm /var/cache/vigilo/vigirrd")
+addFilter("[EW]: non-standard-dir-perm /var/log/vigilo/vigirrd")
+addFilter("[EW]: non-standard-dir-perm /var/cache/vigilo/vigirrd")
+addFilter("[EW]: non-standard-dir-perm /var/cache/vigilo/sessions")
