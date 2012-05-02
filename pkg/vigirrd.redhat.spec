@@ -3,8 +3,9 @@
 %define pyver 26
 %define pybasever 2.6
 %define __python /usr/bin/python%{pybasever}
-%define __os_install_post %{__python26_os_install_post}
-%{!?python26_sitelib: %define python26_sitelib %(python26 -c "from distutils.sysconfig import get_python_lib; print get_python_lib()")}
+%{!?python_sitelib: %define python_sitelib %(%{__python} -c "from distutils.sysconfig import get_python_lib; print get_python_lib()")}
+# Turn off the brp-python-bytecompile script
+%define __os_install_post %(echo '%{__os_install_post}' | sed -e 's!/usr/lib[^[:space:]]*/brp-python-bytecompile[[:space:]].*$!!g')
 
 Name:       vigilo-%{module}
 Summary:    @SUMMARY@
@@ -84,8 +85,6 @@ rm -rf $RPM_BUILD_ROOT
 %config(noreplace) %{_sysconfdir}/vigilo/%{module}/*.py
 %config(noreplace) %{_sysconfdir}/vigilo/%{module}/*.wsgi
 %config(noreplace) %attr(640,root,apache) %{_sysconfdir}/vigilo/%{module}/*.ini
-%ghost %{_sysconfdir}/vigilo/%{module}/*.pyo
-%ghost %{_sysconfdir}/vigilo/%{module}/*.pyc
 %config(noreplace) /etc/httpd/conf.d/%{name}.conf
 %config(noreplace) /etc/cron.d/*
 %dir %{_localstatedir}/log/vigilo/
@@ -95,4 +94,4 @@ rm -rf $RPM_BUILD_ROOT
 %attr(750,apache,apache) %dir %{_localstatedir}/cache/vigilo/vigirrd
 %attr(750,apache,apache) %dir %{_localstatedir}/cache/vigilo/vigirrd/img
 %attr(750,vigiconf,apache) %dir %{_localstatedir}/cache/vigilo/vigirrd/db
-%{python26_sitelib}/*
+%{python_sitelib}/*
