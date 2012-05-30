@@ -730,7 +730,7 @@ class RRD(object):
         a.append("COMMENT:  \\n")
 
         # Tabs (legend)
-        s = "COMMENT:%s" % _("value").ljust(justify + 1)
+        s = "COMMENT:%s" % (" " * (justify + 1))
         for tab in template["tabs"]:
             # if we have a nicer label, use it
             if tab in config.static_labels:
@@ -738,7 +738,7 @@ class RRD(object):
             else:
                 # if we dont, too bad, just print it.
                 tabstr = tab
-            s += " "*8 + tabstr.strip() # align it
+            s += " "*7 + tabstr.strip() # align it
 
         a.append(str(s)+"\\n")
 
@@ -953,10 +953,10 @@ class RRD(object):
 #                LOGGER.debug("added + :STACK to %s"%graphline)
         cmd.append(graphline)
         if is_max:
-            cmd.append("GPRINT:data_%s:LAST:%s\\n" % (i, "%8.2lf%s"))
+            cmd.append("GPRINT:data_%s:LAST:%s\\n" % (i, "%7.2lf%s"))
         else:
             for tab in template["tabs"]:
-                cmd.append("GPRINT:data_%s:%s:%s" % (i, tab, "%8.2lf%s"))
+                cmd.append("GPRINT:data_%s:%s:%s" % (i, tab, "%7.2lf%s"))
             cmd[-1] = cmd[-1] + "\\n"
         return cmd
 

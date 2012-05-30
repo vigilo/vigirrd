@@ -8,7 +8,7 @@ msgstr ""
 "Project-Id-Version: vigirrd 2.0.0\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
 "POT-Creation-Date: 2010-11-19 14:40+0100\n"
-"PO-Revision-Date: 2012-04-18 17:21+0200\n"
+"PO-Revision-Date: 2012-05-30 15:43+0200\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: de_DE <LL@li.org>\n"
 "Plural-Forms: nplurals=2; plural=(n != 1)\n"
@@ -26,10 +26,6 @@ msgstr ""
 #, python-format
 msgid "From \"%(start)s\" to \"%(end)s\""
 msgstr ""
-
-#: vigirrd/lib/rrd.py:733
-msgid "value"
-msgstr "Wert"
 
 #: vigirrd/lib/rrd.py:755
 msgid "Can't sort DS dependencies"
