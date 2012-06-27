@@ -62,12 +62,14 @@ setup(
     vigirrd-cleanup-cache = vigirrd.commandline:cleanup_cache
     """,
     data_files=[
-        (os.path.join(sysconfdir, 'vigilo/vigirrd/'), [
-            'deployment/vigirrd.conf',
-            'deployment/vigirrd.wsgi',
-            'deployment/settings.ini',
-            'conf/templates.py',
+        (os.path.join(sysconfdir, 'vigilo', 'vigirrd'), [
+            os.path.join('deployment', 'vigirrd.conf'),
+            os.path.join('deployment', 'vigirrd.wsgi'),
+            os.path.join('deployment', 'settings.ini'),
+            os.path.join('conf', 'templates.py'),
         ]),
-        ('/etc/cron.d/', ['deployment/vigirrd.cron']),
+        (os.path.join(sysconfdir, 'cron.d'), [
+            os.path.join('deployment', 'vigirrd.cron'),
+        ]),
     ],
 )
