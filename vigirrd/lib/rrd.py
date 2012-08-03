@@ -403,19 +403,55 @@ class RRD(object):
         """getLast"""
         return rrdtool.last(str(self.filename))
 
+    def getPeriodCF(self, start):
+        """
+        Retourne la fonction de calcul à appliquer
+        pour la période commençant à la date donnée.
+
+        @param start: Date de début de la période considérée.
+        @type start: C{int}
+        @return: Fonction de calcul à utiliser ("LAST" ou "AVERAGE").
+        @rtype: C{str}
+        """
+        infos = rrdtool.info(self.filename)
+        step = infos['step']
+        now = time.mktime(datetime.datetime.utcnow().timetuple())
+        i = 0
+        rras = []
+        while ('rra[%d].cf' % i) in infos:
+            # Date de la 1ère valeur possible dans ce RRA.
+            first = now - infos['rra[%d].rows' % i] * step
+            # Si la date demandée n'appartient pas
+            # à ce RRA, on l'ignore.
+            if start < first:
+                i += 1
+                continue
+
+            rras.append({
+                'cf': infos['rra[%d].cf' % i],
+                'first': first,
+            })
+            i += 1
+        # On trie les RRA restants par granularité décroissante.
+        rras.sort(cmp=lambda a, b: int(b['first'] - a['first']))
+        if not rras:
+            return "AVERAGE"
+        return rras[0]['cf']
+
     def getStartTime(self):
         """Gets the timestamp of the first non-null entry in the RRD"""
         first =  rrdtool.first(self.filename)
         end = rrdtool.last(self.filename)
+        cf = self.getPeriodCF(first)
         try:
             info , _ds_rrd , data = rrdtool.fetch(self.filename,
-                    "AVERAGE", "--start", str(first), "--end", str(end))
+                    cf, "--start", str(first), "--end", str(end))
         except rrdtool.error:
             # Adjust for daylight saving times
             first = first - 3600
             end = end + 3600
             info , _ds_rrd , data = rrdtool.fetch(self.filename,
-                    "AVERAGE", "--start", str(first), "--end", str(end))
+                    cf, "--start", str(first), "--end", str(end))
         #start_rrd = info[0]
         #end_rrd = info[1]
         step = info[2]
@@ -482,10 +518,11 @@ class RRD(object):
                     'end': end,
                 })
             end = now
-        LOGGER.debug("%s AVERAGE --start %s --end %s" % \
-                        (self.filename, str(start), str(end)))
+        cf = self.getPeriodCF(start)
+        LOGGER.debug("rrdtool fetch %s %s --start %s --end %s" %
+                    (self.filename, cf, str(start), str(end)))
 
-        info , ds_rrd , data = rrdtool.fetch(str(self.filename), "AVERAGE", \
+        info , ds_rrd , data = rrdtool.fetch(str(self.filename), cf,
                                    "--start", str(start), "--end", str(end))
         #start_rrd = info[0]
         #end_rrd = info[1]
@@ -730,7 +767,7 @@ class RRD(object):
         a.append("COMMENT:  \\n")
 
         # Tabs (legend)
-        s = "COMMENT:%s" % _("value").ljust(justify + 1)
+        s = "COMMENT:%s" % (" " * (justify + 1))
         for tab in template["tabs"]:
             # if we have a nicer label, use it
             if tab in config.static_labels:
@@ -738,13 +775,13 @@ class RRD(object):
             else:
                 # if we dont, too bad, just print it.
                 tabstr = tab
-            s += " "*8 + tabstr.strip() # align it
+            s += " "*7 + tabstr.strip() # align it
 
         a.append(str(s)+"\\n")
 
         defs = []
         for i in range(len(ds_list)):
-            defs.extend(self.get_def(ds_list, i, template))
+            defs.extend(self.get_def(ds_list, i, template, start))
         try:
             defs = self._sort_defs(defs, ds_list)
         except nx.NetworkXUnfeasible, e:
@@ -833,10 +870,11 @@ class RRD(object):
                 params = template["draw"][0]
         return params
 
-    def get_def(self, ds_list, i, template):
+    def get_def(self, ds_list, i, template, start):
         """
         Génère un indicateur consolidé "<ds>_orig" correspondant
-        à la valeur moyenne sur la période et le pas considérés.
+        à la valeur moyenne ou à la dernière valeur sur la période
+        et le pas considérés.
 
         @param ds_list: liste complète d'objets PerfDataSource à afficher sur
             le graphe
@@ -846,12 +884,14 @@ class RRD(object):
         @param template: modèle graphique de génération, transmis par la
             fonction L{graph}
         @type  template: C{dict}
+        @param start: Horodatage du début de la période représentée.
+        @type  start: C{int}
         """
         cdef = [ c for c in template["cdefs"] if c.name == ds_list[i].name ]
         if cdef:
-            cmds = self.get_cdef(cdef[0], ds_list, i)
+            cmds = self.get_cdef(cdef[0], ds_list, i, start)
         else:
-            cmds = self.get_ds_def(ds_list, i)
+            cmds = self.get_ds_def(ds_list, i, start)
 
         # Remplace l'indicateur "<ds>" par la valeur de "<ds>_orig"
         # générée précédemment, en lui appliquant le facteur approprié.
@@ -865,7 +905,7 @@ class RRD(object):
 
         return cmds
 
-    def get_cdef(self, cdef, ds_list, i):
+    def get_cdef(self, cdef, ds_list, i, start):
         """
         Retourne la partie de la commande RRD concernant la définition des
         valeurs à grapher (CDEFs, et valeurs après application du facteur
@@ -892,12 +932,14 @@ class RRD(object):
                 rrdfile = get_rrd_path(self.server, cmd,
                                        base_dir=config['rrd_base'],
                                        path_mode=rrd_path_mode)
-                result.append("DEF:data_%s_source=%s:DS:AVERAGE" % (i, rrdfile))
+                cf = RRD(rrdfile).getPeriodCF(start)
+                result.append("DEF:data_%s_source=%s:DS:%s" %
+                              (i, rrdfile, cf))
                 cmd_list[cmd_index] = "data_%d_source" % i
         result.append("CDEF:data_%s_orig=%s" % (i, ",".join(cmd_list)))
         return result
 
-    def get_ds_def(self, ds_list, i):
+    def get_ds_def(self, ds_list, i, start):
         """
         Retourne la partie de la commande RRD concernant la définition des
         fichiers RRD source.
@@ -915,7 +957,8 @@ class RRD(object):
             rrdfile = self.filename
         if not os.path.exists(rrdfile):
             raise RRDNotFoundError(rrdfile)
-        return [ "DEF:data_%s_orig=%s:DS:AVERAGE" % (i, rrdfile) ]
+        cf = RRD(rrdfile).getPeriodCF(start)
+        return [ "DEF:data_%s_orig=%s:DS:%s" % (i, rrdfile, cf) ]
 
     def get_graph_cmd_for_ds(self, d, i, template, is_max=False, justify=18):
         """
@@ -953,10 +996,10 @@ class RRD(object):
 #                LOGGER.debug("added + :STACK to %s"%graphline)
         cmd.append(graphline)
         if is_max:
-            cmd.append("GPRINT:data_%s:LAST:%s\\n" % (i, "%8.2lf%s"))
+            cmd.append("GPRINT:data_%s:LAST:%s\\n" % (i, "%7.2lf%s"))
         else:
             for tab in template["tabs"]:
-                cmd.append("GPRINT:data_%s:%s:%s" % (i, tab, "%8.2lf%s"))
+                cmd.append("GPRINT:data_%s:%s:%s" % (i, tab, "%7.2lf%s"))
             cmd[-1] = cmd[-1] + "\\n"
         return cmd
 
@@ -977,7 +1020,8 @@ class RRD(object):
         end = lasttime
 
         # informations
-        _info, _ds_rrd, data = rrdtool.fetch(self.filename, "AVERAGE",
+        cf = self.getPeriodCF(start)
+        _info, _ds_rrd, data = rrdtool.fetch(self.filename, cf,
                                "--start", str(start), "--end", str(end))
 
         if len(data) == 0 or len(data[0]) == 0:

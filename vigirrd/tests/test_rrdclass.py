@@ -5,6 +5,7 @@
 # License: GNU GPL v2 <http://www.gnu.org/licenses/gpl-2.0.html>
 
 import os
+import time
 import tempfile
 import shutil
 from unittest import TestCase
@@ -172,7 +173,8 @@ class SortDSTestCase(TestController):
     def _get_sorted_defs(self, ds_list):
         defs = []
         for i in range(len(ds_list)):
-            defs.extend(self.rrd.get_def(ds_list, i, self.template))
+            defs.extend(self.rrd.get_def(ds_list, i, self.template,
+                                         int(time.time())))
         print "defs:", defs
         sorted_defs = self.rrd._sort_defs(defs, ds_list)
         print "sorted:", sorted_defs
@@ -248,3 +250,23 @@ class SortDSTestCase(TestController):
         self.template["cdefs"] = [cdef1]
         ds_list = [ds1]
         self.assertRaises(nx.NetworkXUnfeasible, self._get_sorted_defs, ds_list)
+
+class TestRRDclassCF(TestController):
+    def test_getPeriodCF(self):
+        """
+        Récupération de la fonction de consolidation adéquate
+        """
+        conffile.reload()
+        days = 86400
+        rrdfile = rrd.RRD(
+            os.path.join(tg.config['rrd_base'], "testserver", "cf.rrd"),
+            "testserver"
+        )
+        ts = int(time.time())
+
+        # Récupération de la fonction de consolidation pour l'archive
+        # la plus précise : il doit s'agir de "LAST".
+        self.assertEquals(rrdfile.getPeriodCF(ts - 1 * days), "LAST")
+
+        # En revanche, pour l'archive juste après, il doit s'agit d' "AVERAGE".
+        self.assertEquals(rrdfile.getPeriodCF(ts - 3 * days), "AVERAGE")
