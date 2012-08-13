@@ -642,26 +642,26 @@ class RRD(object):
             if "_" not in selected_locale:
                 selected_locale = "%s_%s" % (selected_locale,
                                              selected_locale.upper())
+            # On force l'utilisation d'une locale UTF-8 pour rrdtool.
+            # Cf. http://bugs.debian.org/cgi-bin/bugreport.cgi?bug=493553
+            selected_locale += '.utf8'
             LOGGER.debug(u"Trying to set rrdtool's locale to %s" %
                 selected_locale)
-            # D'après plusieurs posts sur internet, rrdtool
-            # ne fonctionne qu'avec les locales utilisant UTF-8.
-            # De plus, LC_ALL a la priorité sur LC_TIME,
-            # il faut donc s'en débarrasser.
-            if 'LC_ALL' in os.environ:
-                del os.environ['LC_ALL']
 
-            # os.environ est utilisé par rrdtool,
-            # setlocale() est utilisé par strftime().
-            os.environ['LC_TIME'] = selected_locale
+            # On supprime les variables d'environnement susceptibles d'avoir
+            # la priorité sur LC_TIME lors du choix de la locale.
+            for env_var in ('LC_ALL', 'LANGUAGE', 'LANG'):
+                if env_var in os.environ:
+                    del os.environ[env_var]
+
+            # On doit manipuler à la fois os.environ et setlocale()
+            # pour changer la locale du processus courant mais aussi
+            # celle des sous-processus qu'il crée.
             try:
                 locale.setlocale(locale.LC_TIME, selected_locale)
+                os.environ['LC_TIME'] = selected_locale
             except locale.Error:
                 pass # locale non supportée, c'est pas grave
-
-        #step = self.host.step
-        #import pprint
-        #pprint.pprint(template)
 
         start_i = int(start)
         if start_i == 0:
@@ -758,9 +758,8 @@ class RRD(object):
         a.append(
             (
                 'COMMENT:' + (_('From "%(start)s" to "%(end)s"') % {
-                    # @FIXME: l'encodage ne devrait pas être hard-codé.
-                    'start': start_date.decode('iso-8859-15'),
-                    'end': end_date.decode('iso-8859-15'),
+                    'start': start_date.decode('utf-8'),
+                    'end': end_date.decode('utf-8'),
                 }) + '\\c'
             ).encode('utf-8')
         )
