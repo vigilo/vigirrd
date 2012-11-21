@@ -1,5 +1,3 @@
-include buildenv/Makefile.common
-include buildenv/buildout.*.cfg
 include buildout.cfg
 include Makefile
 include COPYING.txt
