@@ -1,0 +1,10 @@
+Document: vigilo-vigirrd-manual
+Title: Vigilo VigiRRD manual
+Author: Vigilo Team
+Abstract: The vigilo-vigirrd paquage provides
+ a web interface to display RRD files in Vigilo.
+Section: Text
+
+Format: HTML
+Index: /usr/share/doc/vigilo-vigirrd-doc/html/index.html
+Files: /usr/share/doc/vigilo-vigirrd-doc/html/*

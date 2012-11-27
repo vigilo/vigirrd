@@ -4,6 +4,7 @@ include COPYING.txt
 
 graft doc
 graft pkg
+graft debian
 recursive-include vigirrd/i18n *.pot *.po
 
 graft deployment
