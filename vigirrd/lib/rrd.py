@@ -591,7 +591,7 @@ class RRD(object):
         @type  format: C{str}
         @param start: timestamp de début du graphe
         @type  start: C{int}
-        @oaram duration: durée représentée
+        @param duration: durée représentée
         @type  duration: C{int}
         @param details: affichage du titre et de la légende
         @type  details: C{bool}

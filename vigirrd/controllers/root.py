@@ -18,8 +18,8 @@ from pylons.i18n import ugettext as _
 from tg.exceptions import HTTPServiceUnavailable, HTTPNotFound
 from tg.controllers import CUSTOM_CONTENT_TYPE
 
-from vigirrd.lib.base import BaseController
-#from vigirrd.model import DBSession, metadata
+from vigilo.turbogears.controllers import BaseController
+from vigilo.turbogears.controllers.custom import CustomController
 from vigilo.turbogears.controllers.error import ErrorController
 
 from vigirrd.lib import conffile
@@ -44,6 +44,9 @@ class RootController(BaseController):
 
     """
 
+    error = ErrorController()
+    custom = CustomController()
+
     def __init__(self, *args, **kw):
         super(RootController, self).__init__(*args, **kw)
         # Utilisation de rrdcached
@@ -55,8 +58,6 @@ class RootController(BaseController):
                 LOGGER.warning(_("No access to the rrdcached socket: %s"),
                                rrdcached)
 
-
-    error = ErrorController()
 
     @expose()
     def index(self, **kwargs):
