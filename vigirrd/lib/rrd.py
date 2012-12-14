@@ -316,11 +316,14 @@ def exportCSV(server, graphtemplate, ds, start, end, timezone):
     # Écriture de l'en-tête, puis des données dans un buffer.
     # Le contenu final du buffer correspond au fichier CSV exporté.
     buf = StringIO()
+    quoting = config.get('csv_quoting', 'ALL').upper()
+    if quoting not in ('ALL', 'MINIMAL', 'NONNUMERIC', 'NONE'):
+        quoting = 'ALL'
     csv_writer = csv.writer(buf,
         delimiter=config.get("csv_delimiter_char", ';'),
         escapechar=config.get("csv_escape_char", '\\'),
         quotechar=config.get("csv_quote_char", '"'),
-        quoting=csv.QUOTE_ALL)
+        quoting=getattr(csv, 'QUOTE_%s' % quoting))
 
     csv_writer.writerow(headers)
     csv_writer.writerows(result)
