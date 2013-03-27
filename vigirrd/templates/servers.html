@@ -13,7 +13,7 @@
     <p>Please choose one of these servers:</p>
     <ul>
         <li py:for="server in servers">
-            <a href="${tg.url('/graphs.html', host_=server)}">${server}</a>
+            <a href="${tg.url('/graphs.html', {'host': server})}">${server}</a>
         </li>
     </ul>
 </body>
