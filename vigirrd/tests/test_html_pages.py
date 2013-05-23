@@ -23,7 +23,7 @@ class TestHTMLPages(TestController):
             response.unicode_body
         )
         self.assertTrue(
-            u'<a href="/graphs.html?host=testserver+%C3%A9%C3%A7%C3%A0">'
+            u'<a href="/graphs.html?host=testserver%20%C3%A9%C3%A7%C3%A0">'
             u'testserver éçà</a>' in
             response.unicode_body
         )
@@ -56,7 +56,7 @@ class TestHTMLPages(TestController):
             response.unicode_body
         )
         self.assertTrue(
-            u'<a href="/graphs.html?host=testserver+%C3%A9%C3%A7%C3%A0">'
+            u'<a href="/graphs.html?host=testserver%20%C3%A9%C3%A7%C3%A0">'
             u'testserver éçà</a>' in
             response.unicode_body
         )
