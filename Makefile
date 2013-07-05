@@ -24,7 +24,8 @@ install_pkg: build install_python_pkg install_data
 install_python: $(PYTHON) $(SUBST_FILES)
 	$(PYTHON) setup.py install --record=INSTALLED_FILES
 install_python_pkg: $(PYTHON) $(SUBST_FILES)
-	$(PYTHON) setup.py install --single-version-externally-managed --root=$(DESTDIR) --record=INSTALLED_FILES
+	$(PYTHON) setup.py install --single-version-externally-managed \
+		$(SETUP_PY_OPTS) --root=$(DESTDIR) --record=INSTALLED_FILES
 
 install_data: $(SUBST_FILES)
 	# Permissions de la conf
