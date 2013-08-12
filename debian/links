@@ -1,2 +1,0 @@
-/etc/vigilo/vigirrd/vigirrd.conf                /etc/apache2/sites-available/vigilo-vigirrd.conf
-/usr/share/pyshared/vigirrd/config/app_cfg.py   /etc/vigilo/vigirrd/app_cfg.py
