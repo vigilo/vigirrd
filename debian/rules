@@ -32,14 +32,10 @@ override_dh_auto_build:
 	        deployment/vigirrd.cron
 
 override_dh_auto_install:
-	/usr/bin/python setup.py install --root=debian/$(PKGNAME) \
-	    --single-version-externally-managed \
-	    --install-layout=deb
-	mkdir -p debian/$(PKGNAME)/var/log/vigilo/vigirrd/
-	mkdir -p debian/$(PKGNAME)/var/cache/vigilo/sessions/
-	mkdir -p debian/$(PKGNAME)/var/cache/vigilo/vigirrd/img \
-	         debian/$(PKGNAME)/var/cache/vigilo/vigirrd/db
-	find vigirrd/i18n/ -name '*.mo' -o -name '*.js' -exec \
+	$(MAKE) install_pkg \
+	    DESTDIR=$(CURDIR)/debian/$(PKGNAME)/ \
+	    PYTHON=/usr/bin/python
+	/usr/bin/find vigirrd/i18n/ -name '*.mo' -o -name '*.js' -exec \
 	    'mv' '{}' "debian/$(PKGNAME)/usr/share/pyshared/{}" ';'
 
 override_dh_auto_test:

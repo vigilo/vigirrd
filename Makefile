@@ -47,11 +47,9 @@ install_data: $(SUBST_FILES)
 	mkdir -p $(DESTDIR)$(LOCALSTATEDIR)/cache/vigilo/sessions
 	chmod 750 $(DESTDIR)$(LOCALSTATEDIR)/cache/vigilo/sessions
 	[ `id -u` -ne 0 ] || chown $(HTTPD_USER): $(DESTDIR)$(LOCALSTATEDIR)/cache/vigilo/sessions
-	mkdir -p $(DESTDIR)$(LOCALSTATEDIR)/cache/vigilo/vigirrd/img \
-	         $(DESTDIR)$(LOCALSTATEDIR)/cache/vigilo/vigirrd/db
+	mkdir -p $(DESTDIR)$(LOCALSTATEDIR)/cache/vigilo/vigirrd/img
 	chmod -R 750 $(DESTDIR)$(LOCALSTATEDIR)/cache/vigilo/vigirrd
 	[ `id -u` -ne 0 ] || chown -R $(HTTPD_USER): $(DESTDIR)$(LOCALSTATEDIR)/cache/vigilo/vigirrd
-	[ `id -u` -ne 0 ] || chown vigiconf:$(HTTPD_USER) $(DESTDIR)$(LOCALSTATEDIR)/cache/vigilo/vigirrd/db
 
 lint: lint_pylint
 tests: tests_nose

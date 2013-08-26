@@ -85,5 +85,4 @@ rm -rf $RPM_BUILD_ROOT
 %attr(750,apache,apache) %{_localstatedir}/cache/vigilo/sessions
 %attr(750,apache,apache) %dir %{_localstatedir}/cache/vigilo/vigirrd
 %attr(750,apache,apache) %dir %{_localstatedir}/cache/vigilo/vigirrd/img
-%attr(750,vigiconf,apache) %dir %{_localstatedir}/cache/vigilo/vigirrd/db
 %{python_sitelib}/*

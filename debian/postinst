@@ -35,7 +35,6 @@ case "$1" in
 
         chmod -R 750 /var/cache/vigilo/$MODULE
         chown -R $HTTPD_USER: /var/cache/vigilo/$MODULE
-        chown vigiconf:$HTTPD_USER /var/cache/vigilo/$MODULE/db
     ;;
 
     abort-upgrade|abort-remove|abort-deconfigure)
