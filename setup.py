@@ -15,6 +15,7 @@ except ImportError:
 tests_require = ['WebTest', 'BeautifulSoup']
 
 sysconfdir = os.getenv("SYSCONFDIR", "/etc")
+cronext = os.getenv("CRONEXT", ".cron")
 
 setup(
     name='vigilo-vigirrd',
@@ -69,7 +70,7 @@ setup(
             os.path.join('conf', 'templates.py'),
         ]),
         (os.path.join(sysconfdir, 'cron.d'), [
-            os.path.join('deployment', 'vigirrd.cron'),
+            os.path.join('deployment', 'vigirrd%s' % cronext),
         ]),
     ],
 )

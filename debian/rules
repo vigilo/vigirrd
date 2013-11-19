@@ -29,7 +29,7 @@ override_dh_auto_build:
 	/usr/bin/python setup.py compile_catalog
 	$(MAKE) deployment/logrotate.conf deployment/settings.ini \
 	        deployment/vigirrd.conf deployment/vigirrd.wsgi \
-	        deployment/vigirrd.cron
+	        deployment/vigirrd
 
 override_dh_auto_install:
 	$(MAKE) install_pkg \

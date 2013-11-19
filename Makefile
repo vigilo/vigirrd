@@ -1,16 +1,17 @@
 NAME := vigirrd
 
+all: build
+include buildenv/Makefile.common.python
+
 SUBST_FILES := \
 	deployment/logrotate.conf \
 	deployment/settings.ini   \
 	deployment/vigirrd.conf   \
-	deployment/vigirrd.cron   \
+	deployment/vigirrd$(CRONEXT)   \
 	deployment/vigirrd.wsgi
 
-all: build
 build: $(SUBST_FILES)
 
-include buildenv/Makefile.common.python
 MODULE := $(NAME)
 
 deployment/%: deployment/%.in
@@ -18,13 +19,16 @@ deployment/%: deployment/%.in
 	    -e 's,@HTTPD_USER@,$(HTTPD_USER),g' \
 	    -e 's,@LOCALSTATEDIR@,$(LOCALSTATEDIR),g' $^ > $@
 
+deployment/vigirrd$(CRONEXT): deployment/cronjobs.in
+	sed -e 's,@HTTPD_USER@,$(HTTPD_USER),g' $^ > $@
+
 install: build install_python install_data
 install_pkg: build install_python_pkg install_data
 
 install_python: $(PYTHON) $(SUBST_FILES)
-	$(PYTHON) setup.py install --record=INSTALLED_FILES
+	CRONEXT=$(CRONEXT) $(PYTHON) setup.py install --record=INSTALLED_FILES
 install_python_pkg: $(PYTHON) $(SUBST_FILES)
-	$(PYTHON) setup.py install --single-version-externally-managed \
+	CRONEXT=$(CRONEXT) $(PYTHON) setup.py install --single-version-externally-managed \
 		$(SETUP_PY_OPTS) --root=$(DESTDIR) --record=INSTALLED_FILES
 
 install_data: $(SUBST_FILES)
