@@ -39,7 +39,14 @@ def make_app(global_conf, full_stack=True, **app_conf):
     """
     app = make_base_app(global_conf, full_stack=full_stack, **app_conf)
 
-    image_cache = StaticURLParser(tg.config["image_cache_dir"])
+    max_age = app_conf.get("cache_max_age")
+    try:
+        max_age = int(max_age)
+    except (ValueError, TypeError):
+        max_age = None
+
+    image_cache = StaticURLParser(tg.config["image_cache_dir"],
+                                  cache_max_age=max_age)
 
     app = Cascade([image_cache, app])
     return app
