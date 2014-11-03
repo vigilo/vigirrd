@@ -525,7 +525,7 @@ class RRD(object):
         LOGGER.debug("rrdtool fetch %s %s --start %s --end %s" %
                     (self.filename, cf, str(start), str(end)))
 
-        info , ds_rrd , data = rrdtool.fetch(str(self.filename), cf,
+        info, ds_rrd, data = rrdtool.fetch(str(self.filename), cf,
                                    "--start", str(start), "--end", str(end))
         #start_rrd = info[0]
         #end_rrd = info[1]
@@ -623,7 +623,7 @@ class RRD(object):
 
         # On positionne TZ à un fuseau horaire
         # du type "UTC-01" ou encore "UTC+09:30".
-        # Cette variable permet change l'interprétation des horodatages
+        # Cette variable permet de changer l'interprétation des horodatages
         # donnés en entrée pour que rrdtool ajuste les dates/heures.
         # Méthode non thread-safe, mais c'est la seule reconnue par rrdtool.
         old_tz = os.environ.get('TZ')
