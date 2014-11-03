@@ -8,6 +8,7 @@
 import os
 import time
 import re
+import threading
 from StringIO import StringIO
 from logging import getLogger
 LOGGER = getLogger(__name__)
@@ -46,6 +47,7 @@ class RootController(BaseController):
 
     error = ErrorController()
     custom = CustomController()
+    lock = threading.RLock()
 
     def __init__(self, *args, **kw):
         super(RootController, self).__init__(*args, **kw)
@@ -171,6 +173,8 @@ class RootController(BaseController):
                                            int(details)
                                            )
         image_file = os.path.join(config.get("image_cache_dir"), filename)
+
+        self.lock.acquire()
         try:
             rrd.showMergedRRDs(kwargs["host"], kwargs["graphtemplate"],
                                image_file, start, duration, details=details,
@@ -179,6 +183,9 @@ class RootController(BaseController):
             raise HTTPServiceUnavailable(str(e))
         except rrd.RRDNotFoundError, e:
             raise HTTPNotFound("No RRD: %s" % str(e))
+        finally:
+            self.lock.release()
+
         if pylons.request.response_type == 'image/png':
             response.headers["Content-Type"] = "image/png"
             response.headers['Pragma'] = 'no-cache'
@@ -290,4 +297,8 @@ class RootController(BaseController):
         response.headers['Content-Type'] = 'text/csv'
         response.headers['Content-Disposition'] = \
                         'attachment;filename="%s"' % filename
-        return rrd.exportCSV(host, graphtemplate, ds, start, end, timezone)
+        self.lock.acquire()
+        try:
+            return rrd.exportCSV(host, graphtemplate, ds, start, end, timezone)
+        finally:
+            self.lock.release()
