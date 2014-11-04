@@ -13,6 +13,10 @@ WSGIScriptAlias /vigilo/vigirrd "@SYSCONFDIR@/vigilo/vigirrd/vigirrd.wsgi"
 KeepAlive Off
 
 <Directory "@SYSCONFDIR@/vigilo/vigirrd/">
+    <IfModule mod_headers.c>
+        Header set X-UA-Compatible "IE=edge"
+    </IfModule>
+
     <Files "vigirrd.wsgi">
         WSGIProcessGroup vigirrd
         WSGIApplicationGroup %{GLOBAL}
