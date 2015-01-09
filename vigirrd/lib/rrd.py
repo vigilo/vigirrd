@@ -3,7 +3,7 @@
 ################################################################################
 #
 # RRDGraph Python RRD Graphing library
-# Copyright (C) 2007-2014 CS-SI
+# Copyright (C) 2007-2015 CS-SI
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
