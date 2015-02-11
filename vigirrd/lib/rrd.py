@@ -184,6 +184,20 @@ def getEncodedFileName(server, ds):
                             path_mode=rrd_path_mode)
     return filename
 
+def convertToUTF8(input):
+    """
+    Convertit des éléments (ou des listes d'éléments) unicode en UTF8.
+    @type input: élément en unicode.
+    @param input: mixed
+    @rtype: mixed
+    """
+    if isinstance(input, list):
+        return [convertToUTF8(element) for element in input]
+    elif isinstance(input, unicode):
+        return input.encode('utf-8')
+    else:
+        return input
+
 # VIGILO_EXIG_VIGILO_PERF_0040:Export des donnees d'un graphe au format CSV
 def exportCSV(server, graphtemplate, ds, start, end, timezone):
     """
@@ -312,6 +326,9 @@ def exportCSV(server, graphtemplate, ds, start, end, timezone):
 
     # On trie les valeurs par horodatage ascendant.
     result = sorted(result, key=lambda r: int(r[0]))
+
+    # On force l'encodage en utf-8 si besoin.
+    result = convertToUTF8(result)
 
     # Écriture de l'en-tête, puis des données dans un buffer.
     # Le contenu final du buffer correspond au fichier CSV exporté.
