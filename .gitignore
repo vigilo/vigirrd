@@ -24,7 +24,7 @@ dist/
 doc/apidoc/
 doc/_build/
 doc/coverage/
-i18n/*/LC_MESSAGES/*.mo
-i18n/*/LC_MESSAGES/*.js
+*/i18n/*/LC_MESSAGES/*.mo
+*/i18n/*/LC_MESSAGES/*.js
 src/twisted/plugins/dropin.cache
 
