@@ -5,14 +5,13 @@
 """Setup the vigirrd application"""
 
 import os
+import imp
 import time
 import logging
 import logging.config
 
 from tg import config
 from paste.deploy import appconfig
-
-from vigirrd.config.environment import load_environment
 
 CACHE_KEEP_MINUTES = 5
 LOGGER = logging.getLogger(__name__)
@@ -25,7 +24,15 @@ def load_conf():
     LOGGER.debug("Loading the configuration")
     # Chargement de la configuration de VigiRRD
     conf = appconfig("config:%s#main" % conf_file)
+
+    # Chargement du fichier "app_cfg.py" se trouvant à côté de "settings.ini".
+    mod_info = imp.find_module('app_cfg', [ conf.global_conf['here'] ])
+    app_cfg = imp.load_module('vigirrd.config.app_cfg', *mod_info)
+
+    # Initialisation de l'environnement d'exécution.
+    load_environment = app_cfg.base_config.make_load_environment()
     load_environment(conf.global_conf, conf.local_conf)
+
 
 def cleanup_cache():
     """

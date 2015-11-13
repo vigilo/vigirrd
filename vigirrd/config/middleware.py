@@ -4,19 +4,15 @@
 
 """WSGI middleware initialization for the vigirrd application."""
 
-from vigirrd.config.app_cfg import base_config
-from vigirrd.config.environment import load_environment
-import tg
-
+import imp
+import os.path
 from pkg_resources import resource_filename
 from paste.cascade import Cascade
 from paste.urlparser import StaticURLParser
 
-__all__ = ['make_app']
+import tg
 
-# Use base_config to setup the necessary PasteDeploy application factory.
-# make_base_app will wrap the TG2 app with all the middleware it needs.
-make_base_app = base_config.setup_tg_wsgi_app(load_environment)
+__all__ = ['make_app']
 
 
 def make_app(global_conf, full_stack=True, **app_conf):
@@ -37,7 +33,15 @@ def make_app(global_conf, full_stack=True, **app_conf):
     @return: The vigirrd application with all the relevant middleware
         loaded.
     """
-    app = make_base_app(global_conf, full_stack=full_stack, **app_conf)
+    # Charge le fichier "app_cfg.py" se trouvant aux côtés de "settings.ini".
+    mod_info = imp.find_module('app_cfg', [ global_conf['here'] ])
+    app_cfg = imp.load_module('vigirrd.config.app_cfg', *mod_info)
+    base_config = app_cfg.base_config
+
+    # Initialisation de l'application et de son environnement d'exécution.
+    load_environment = base_config.make_load_environment()
+    make_base_app = base_config.setup_tg_wsgi_app(load_environment)
+    app = make_base_app(global_conf, full_stack=True, **app_conf)
 
     max_age = app_conf.get("cache_max_age")
     try:

@@ -15,3 +15,4 @@ graft vigirrd/tests/testdata
 graft conf
 include *.ini
 include jsl.cfg
+include app_cfg.py
