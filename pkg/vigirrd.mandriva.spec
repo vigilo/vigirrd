@@ -121,8 +121,6 @@ make install_pkg \
     LOCALSTATEDIR=%{_localstatedir} \
     PYTHON=%{__python}
 
-%find_lang %{name}
-
 
 %pre
 usermod -a -G vigilo-metro apache
