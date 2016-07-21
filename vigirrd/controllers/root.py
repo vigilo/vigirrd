@@ -12,11 +12,9 @@ from StringIO import StringIO
 from logging import getLogger
 LOGGER = getLogger(__name__)
 
-import pylons
-from tg import expose, url, redirect, config, response
-from pylons.i18n import ugettext as _
+from tg import expose, url, redirect, config, request, response
+from tg.i18n import ugettext as _
 from tg.exceptions import HTTPServiceUnavailable, HTTPNotFound
-from tg.controllers import CUSTOM_CONTENT_TYPE
 
 from vigilo.turbogears.controllers import BaseController
 from vigilo.turbogears.controllers.custom import CustomController
@@ -70,7 +68,7 @@ class RootController(BaseController):
 
         host = kwargs["host"]
         if "graphtemplate" not in kwargs:
-            return redirect('/graphs', host_=host)
+            return redirect('/graphs', {'host': host})
 
         if "start" in kwargs:
             start = int(kwargs["start"])
@@ -88,7 +86,7 @@ class RootController(BaseController):
             format = "html"
 
         redirect('/graph.%s' % format, {
-            'host_': kwargs['host'],
+            'host': kwargs['host'],
             'graphtemplate': kwargs['graphtemplate'],
             'start': start,
             'duration': duration,
@@ -124,7 +122,7 @@ class RootController(BaseController):
             "graphs": graphtemplates,
        }
 
-    @expose("graph.html", content_type=CUSTOM_CONTENT_TYPE)
+    @expose("graph.html")
     def graph(self, **kwargs):
         conffile.reload()
         # Par défaut, la légende est affichée.
@@ -172,7 +170,7 @@ class RootController(BaseController):
         except rrd.RRDNotFoundError, e:
             raise HTTPNotFound("No RRD: %s" % str(e))
 
-        if pylons.request.response_type == 'image/png':
+        if request.response_type == 'image/png':
             response.headers["Content-Type"] = "image/png"
             response.headers['Pragma'] = 'no-cache'
             response.headers['Cache-Control'] = 'no-cache'
@@ -204,7 +202,7 @@ class RootController(BaseController):
                 "ds": ds
                 }
 
-    @expose(content_type=CUSTOM_CONTENT_TYPE)
+    @expose()
     def export(self, host, graphtemplate, ds=None,
         start=None, end=None, timezone=None,
         nocache=None): # pylint: disable-msg=W0613

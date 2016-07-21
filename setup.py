@@ -33,7 +33,6 @@ setup(
         "pytz",
     ],
     zip_safe=False, # pour pouvoir déplacer app_cfg.py
-    paster_plugins=['PasteScript', 'Pylons', 'TurboGears2', 'tg.devtools'],
     packages=find_packages(exclude=['ez_setup']),
     include_package_data=True,
     test_suite='nose.collector',
@@ -55,9 +54,6 @@ setup(
     entry_points="""
     [paste.app_factory]
     main = vigirrd.config.middleware:make_app
-
-    [paste.app_install]
-    main = pylons.util:PylonsInstaller
 
     [console_scripts]
     vigirrd-cleanup-cache = vigirrd.commandline:cleanup_cache

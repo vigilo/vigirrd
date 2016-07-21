@@ -10,6 +10,7 @@ import unittest
 
 from paste.deploy import loadapp
 from webtest import TestApp
+from gearbox.main import GearBox
 
 from vigirrd.model import metadata, DBSession
 
@@ -31,3 +32,5 @@ class TestController(unittest.TestCase):
                                             self.application_under_test),
                           relative_to=conf_dir)
         self.app = TestApp(wsgiapp)
+        box = GearBox()
+        box.run(['setup-app', '-q', '--debug', '-c', config_file])

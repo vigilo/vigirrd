@@ -9,13 +9,62 @@ import time
 import tempfile
 import shutil
 from unittest import TestCase
+from types import ModuleType
 
 import networkx as nx
-import tg
+from tg.util import ContextObj
+from tg import request_local, config
+from tg.support.registry import StackedObjectProxy, RegistryManager
+from tg.wsgiapp import RequestLocals
+from tg.i18n import _get_translator
+from webtest import TestApp
+
 from vigilo.common import get_rrd_path
 from vigirrd import model
 from vigirrd.lib import rrd, conffile
 from vigirrd.tests import TestController
+
+
+class CallWrapperApp(object):
+    def __init__(self, obj, func, *args, **kw):
+        self.obj = obj
+        self.func = func
+        self.args = args
+        self.kw = kw
+        self.content_type = 'text/plain'
+        self.status = '200 OK'
+
+    def __call__(self, environ, start_response):
+        if 'paste.registry' in environ:
+            conf = config._current_obj()
+            req = request_local.Request(environ)
+            req._fast_setattr('_language', conf['lang'])
+            req._fast_setattr('_response_type', None)
+
+            ctx = RequestLocals()
+            ctx.response = request_local.Response()
+            ctx.request = req
+            ctx.translator = _get_translator(conf['lang'], tg_config=conf)
+            ctx.config = conf
+
+            registry = environ['paste.registry']
+            registry.register(request_local.config, conf)
+            registry.register(request_local.context, ctx)
+
+        response_headers = [('Content-type', self.content_type)]
+        start_response(self.status, response_headers)
+
+        # Rebinding de la méthode sur son objet si nécessaire.
+        if isinstance(self.obj, ModuleType):
+            desc = self.func
+        else:
+            desc = self.func.__get__(self.obj, type(self.obj))
+
+        res = desc(*self.args, **self.kw)
+        if not isinstance(res, str):
+            res = unicode(res).encode('utf-8')
+        return [res]
+
 
 class TestRRDclass(TestController):
     """Test the module-level functions in RRDGraph"""
@@ -28,7 +77,7 @@ class TestRRDclass(TestController):
         # spécifique VigiRRD
         conffile.reload()
         dsname = "sysUpTime"
-        rrdfilename = os.path.join(tg.config['rrd_base'], "testserver",
+        rrdfilename = os.path.join(config['rrd_base'], "testserver",
                                    "%s.rrd" % dsname)
         self.rrd = rrd.RRD(rrdfilename, "testserver")
 
@@ -84,20 +133,22 @@ class TestRRDclass(TestController):
         tmpdir = tempfile.mkdtemp()
         tmpfile = os.path.join(tmpdir, "graph.svg")
 
-        #graphfile = os.path.join(tg.config["rrd_base"],
-        #                         "testserver", "graph.svg")
         start = 1232694600
         duration = 3500
 
         try:
-            # La bibliothèque de manipulation des fichiers RRS
+            # La bibliothèque de manipulation des fichiers RRD
             # doit avoir été chargée correctement.
             self.assertTrue(self.rrd is not None)
 
-            #print [pds.name for pds in model.DBSession.query(model.PerfDataSource).all()]
             ds = model.PerfDataSource.by_name("sysUpTime")
-            self.rrd.graph(conffile.templates["lines"], [ds, ], format="SVG",
-                outfile=tmpfile, start=start, duration=duration)
+            wsgiapp = CallWrapperApp(self.rrd, self.rrd.graph,
+                                     conffile.templates["lines"], [ds, ],
+                                     format="SVG", outfile=tmpfile,
+                                     start=start, duration=duration)
+            wsgiapp = RegistryManager(wsgiapp)
+            app = TestApp(wsgiapp)
+            app.get('/')
 
             # L'ancien test vérifiait le contenu du graphe généré,
             # néanmoins le résultat varie beaucoup en fonction de
@@ -134,8 +185,13 @@ class TestRRDclass(TestController):
 "1232005401";"January 15, 2009 7:43:21 AM +0000";"9663871.000000"
 "1232007201";"January 15, 2009 8:13:21 AM +0000";"9665671.000000"
 """[1:]
-        output = rrd.exportCSV(server, graphtemplate,
-                        indicator, start, end, 0)
+
+        wsgiapp = CallWrapperApp(rrd, rrd.exportCSV,
+                                 server, graphtemplate,
+                                 indicator, start, end, 0)
+        wsgiapp = RegistryManager(wsgiapp)
+        app = TestApp(wsgiapp)
+        output = app.get('/').body
 
         # On compare l'export au résultat attendu.
         normalized_output = output.replace("\r\n", "\n")
@@ -155,8 +211,8 @@ class SortDSTestCase(TestController):
         # spécifique VigiRRD
         conffile.reload()
         rrdfilename = get_rrd_path("testserver", "sysUpTime",
-                                   base_dir=tg.config['rrd_base'],
-                                   path_mode=tg.config["rrd_path_mode"])
+                                   base_dir=config['rrd_base'],
+                                   path_mode=config["rrd_path_mode"])
         rrdfilenames = {
             "DS1": rrdfilename,
             "DS2": rrdfilename,
@@ -259,7 +315,7 @@ class TestRRDclassCF(TestController):
         conffile.reload()
         days = 86400
         rrdfile = rrd.RRD(
-            os.path.join(tg.config['rrd_base'], "testserver", "cf.rrd"),
+            os.path.join(config['rrd_base'], "testserver", "cf.rrd"),
             "testserver"
         )
         ts = int(time.time())

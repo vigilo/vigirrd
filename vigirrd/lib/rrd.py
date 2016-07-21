@@ -16,8 +16,10 @@ import datetime
 import csv
 import locale
 import copy
-import babel, pytz
+import babel.dates
+import pytz
 import threading
+import pkg_resources
 from cStringIO import StringIO
 
 from logging import getLogger
@@ -25,7 +27,7 @@ LOGGER = getLogger(__name__)
 
 from vigilo.common.nx import networkx as nx
 from tg import config, request
-from pylons.i18n import ugettext as _
+from tg.i18n import ugettext as _
 from paste.deploy.converters import asbool
 
 from vigilo.common import get_rrd_path
@@ -79,18 +81,10 @@ class RRDToolEnv(object):
                 del os.environ[envvar]
 
         # Détermination de la langue à utiliser pour le rendu.
-        candidates = self._lc_time
+        candidates = self._lc_time + request.languages + ['en']
+
         # Par défaut, on suppose qu'aucune locale n'est compatible.
         lang = None
-
-        if not candidates:
-            try:
-                candidates = request.accept_language.best_matches()
-            except TypeError:
-                # Lorsque le thread n'a pas de "request" associée
-                # (ex: dans les tests unitaires), TypeError est levée.
-                candidates = []
-
         for candidate in candidates:
             try:
                 candidate = candidate.replace('-', '_')
