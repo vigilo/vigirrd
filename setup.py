@@ -28,7 +28,7 @@ setup(
     long_description="Web interface to display RRD files in Vigilo",
     install_requires=[
         "vigilo-turbogears",
-        "rrdtool",
+        "py-rrdtool",
         "simplejson",
         "pytz",
     ],
