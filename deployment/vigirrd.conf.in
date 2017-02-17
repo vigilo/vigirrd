@@ -21,8 +21,15 @@ KeepAlive Off
         WSGIProcessGroup vigirrd
         WSGIApplicationGroup %{GLOBAL}
 
-        Order deny,allow
-        Allow from all
+        <IfModule mod_authz_core.c>
+                # Apache 2.4
+                Require all granted
+        </IfModule>
+        <IfModule !mod_authz_core.c>
+                # Apache 2.2
+                Order Deny,Allow
+                Allow from all
+        </IfModule>
     </Files>
 </Directory>
 
