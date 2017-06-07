@@ -8,7 +8,6 @@
 import os
 import time
 import re
-import threading
 from StringIO import StringIO
 from logging import getLogger
 LOGGER = getLogger(__name__)
@@ -47,7 +46,6 @@ class RootController(BaseController):
 
     error = ErrorController()
     custom = CustomController()
-    lock = threading.RLock()
 
     def __init__(self, *args, **kw):
         super(RootController, self).__init__(*args, **kw)
@@ -139,16 +137,7 @@ class RootController(BaseController):
         try:
             timezone = int(kwargs.get('timezone'))
         except (ValueError, TypeError):
-            # time.timezone utilise la notation POSIX dans laquelle
-            # la direction du temps est inversée
-            # (ie. UTC+01:00 = -3600 secondes).
-            # Note: time.daylight indique juste que la timezone actuelle
-            # supporte le changement d'heure DST, pas qu'il est actif,
-            # il faut recourir à localtime() pour avoir cette information.
-            if time.daylight and time.localtime().tm_isdst:
-                timezone = -time.altzone / 60
-            else:
-                timezone = -time.timezone / 60
+            timezone = None
 
         # La durée par défaut est de 86400 secondes (1 journée).
         duration = int(kwargs.get("duration", 86400))
@@ -174,7 +163,6 @@ class RootController(BaseController):
                                            )
         image_file = os.path.join(config.get("image_cache_dir"), filename)
 
-        self.lock.acquire()
         try:
             rrd.showMergedRRDs(kwargs["host"], kwargs["graphtemplate"],
                                image_file, start, duration, details=details,
@@ -183,8 +171,6 @@ class RootController(BaseController):
             raise HTTPServiceUnavailable(str(e))
         except rrd.RRDNotFoundError, e:
             raise HTTPNotFound("No RRD: %s" % str(e))
-        finally:
-            self.lock.release()
 
         if pylons.request.response_type == 'image/png':
             response.headers["Content-Type"] = "image/png"
@@ -259,16 +245,7 @@ class RootController(BaseController):
         try:
             timezone = int(timezone)
         except (ValueError, TypeError):
-            # time.timezone utilise la notation POSIX dans laquelle
-            # la direction du temps est inversée
-            # (ie. UTC+01:00 = -3600 secondes).
-            # Note: time.daylight indique juste que la timezone actuelle
-            # supporte le changement d'heure DST, pas qu'il est actif,
-            # il faut recourir à localtime() pour avoir cette information.
-            if time.daylight and time.localtime().tm_isdst:
-                timezone = -time.altzone / 60
-            else:
-                timezone = -time.timezone / 60
+            timezone = None
 
         if start >= now:
             raise HTTPNotFound('No data yet')
@@ -297,8 +274,4 @@ class RootController(BaseController):
         response.headers['Content-Type'] = 'text/csv'
         response.headers['Content-Disposition'] = \
                         'attachment;filename="%s"' % filename
-        self.lock.acquire()
-        try:
-            return rrd.exportCSV(host, graphtemplate, ds, start, end, timezone)
-        finally:
-            self.lock.release()
+        return rrd.exportCSV(host, graphtemplate, ds, start, end, timezone)

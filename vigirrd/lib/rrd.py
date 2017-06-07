@@ -17,6 +17,7 @@ import csv
 import locale
 import copy
 import babel, pytz
+import threading
 from cStringIO import StringIO
 
 from logging import getLogger
@@ -32,6 +33,140 @@ from vigilo.common import get_rrd_path
 from vigirrd.lib import conffile
 from vigirrd.model import DBSession, Host, Graph, PerfDataSource, Cdef
 from vigirrd.model.secondary_tables import GRAPH_PERFDATASOURCE_TABLE
+
+
+_LOCK = threading.RLock()
+
+
+class RRDToolEnv(object):
+    def __init__(self, lc_time=None, tzoffset=None):
+        """
+        Gestionnaire de contexte pour RRDtool qui prépare et restaure
+        l'environnement d'exécution.
+
+        @param lc_time: Liste de locales pouvant être utilisées pour formater
+            les dates/heures. La première locale supportée par glibc sera
+            utilisée. Si cet argument est omis, on tentera d'utiliser l'une
+            des locales supportées par le navigateur.
+        @param tzoffset: Décalage (en minutes) par rapport à UTC à appliquer
+            aux graphes. Si cet argument est omis, le décalage horaire
+            du serveur hébergeant VigiRRD est utilisé.
+        """
+        if lc_time is None:
+            self._lc_time = []
+        else:
+            self._lc_time = [lc_time]
+        self._tzoffset = tzoffset
+        self._old_environ = {}
+        self._old_locales = {}
+
+    def __enter__(self):
+        # Préparation de l'environnement.
+        # Comme la bibliothèque RRDtool n'est pas thread-safe,
+        # ceci doit être fait sous le contrôle d'un verrou.
+        _LOCK.acquire()
+
+        # Sauvegarde des locales précédentes.
+        for category in (locale.LC_TIME, locale.LC_NUMERIC):
+            self._old_locales[category] = locale.getlocale(category)
+
+        # Sauvegarde et suppression des variables susceptibles d'interférer.
+        envvars = ('TZ', 'LC_TIME', 'LC_NUMERIC', 'LC_ALL', 'LANGUAGE', 'LANG')
+        for envvar in envvars:
+            old_value = os.environ.get(envvar)
+            self._old_environ[envvar] = old_value
+            if old_value is not None:
+                del os.environ[envvar]
+
+        # Détermination de la langue à utiliser pour le rendu.
+        candidates = self._lc_time
+        # Par défaut, on suppose qu'aucune locale n'est compatible.
+        lang = None
+
+        if not candidates:
+            try:
+                candidates = request.accept_language.best_matches()
+            except TypeError:
+                # Lorsque le thread n'a pas de "request" associée
+                # (ex: dans les tests unitaires), TypeError est levée.
+                candidates = []
+
+        for candidate in candidates:
+            try:
+                candidate = candidate.replace('-', '_')
+                if candidate != 'C':
+                    if "_" not in candidate:
+                        candidate = "%s_%s" % (candidate, candidate.upper())
+
+                    # On force l'utilisation d'une locale UTF-8 pour rrdtool.
+                    # Cf. bug #493553 chez Debian
+                    candidate += '.utf8'
+
+                # Note :
+                # On doit manipuler à la fois os.environ et setlocale()
+                # pour changer la locale du processus courant mais aussi
+                # celle des sous-processus qu'il est suceptible de créer.
+
+                # Pour le formattage des nombres.
+                locale.setlocale(locale.LC_NUMERIC, candidate)
+                os.environ['LC_NUMERIC'] = candidate
+
+                # Pour le formattage des dates/heures.
+                locale.setlocale(locale.LC_TIME, candidate)
+                os.environ['LC_TIME'] = candidate
+            except locale.Error:
+                # Locale non supportée. On tente la locale suivante.
+                pass
+            else:
+                lang = candidate
+                break
+
+        # Correction du décalage horaire.
+        tzoffset = self._tzoffset
+        if tzoffset is None:
+            # Note: la variable TZ utilise la convention POSIX
+            #       (ie. la direction du temps est inversée).
+            if time.daylight and time.localtime().tm_isdst:
+                tzoffset = -time.altzone / 60
+            else:
+                tzoffset = -time.timezone / 60
+
+        if tzoffset > 0:
+            # Python suit la définition mathématique de la division
+            # euclidienne et du modulo, ce qui ne nous arrange pas ici.
+            tz_hours = (-tzoffset) / 60
+            tz_mins  = (-tzoffset) % 60
+        else:
+            tz_hours = -(-tzoffset / 60)
+            tz_mins  = -(-tzoffset % 60)
+
+        os.environ['TZ'] = 'UTC%+03d%s' % (
+            tz_hours,
+            tz_mins and (":%02d" % tz_mins) or ""
+        )
+        LOGGER.debug(u"RRDtool environment prepared with TZ=%r and locale=%r" %
+                     (os.environ['TZ'], lang))
+
+        return (lang, tzoffset)
+
+    def __exit__(self, *_dummy):
+        # Restauration du précédent environnement d'exécution.
+        envvars = ('TZ', 'LC_TIME', 'LC_NUMERIC', 'LC_ALL', 'LANGUAGE', 'LANG')
+        for envvar in envvars:
+            if self._old_environ[envvar] is None:
+                try:
+                    del os.environ[envvar]
+                except KeyError:
+                    pass
+            else:
+                os.environ[envvar] = self._old_environ[envvar]
+
+        # Restauration des locales
+        for category, value in self._old_locales.items():
+            locale.setlocale(category, value)
+
+        _LOCK.release()
+        LOGGER.debug(u"RRDtool environment destroyed")
 
 
 def dateToDateObj(date):
@@ -111,7 +246,7 @@ def listDS(files):
     return list_l
 
 def showMergedRRDs(server, template_name, outfile='-',
-        start=0, duration=0, details=1, timezone=0):
+        start=0, duration=0, details=1, timezone=None):
     """showMergedRRDs"""
     host = Host.by_name(server)
     if host is None:
@@ -211,7 +346,6 @@ def exportCSV(server, graphtemplate, ds, start, end, timezone):
     # initialisation
     host = Host.by_name(server)
     graph = Graph.by_host_and_name(host, graphtemplate)
-    delta = pytz.FixedOffset(-timezone)
 
     # Si l'indicateur est All ou n'existe pas pour cet hôte,
     # tous les indicateurs sont pris en compte.
@@ -235,76 +369,57 @@ def exportCSV(server, graphtemplate, ds, start, end, timezone):
     # arrivent dans l'ordre des indicateurs donnés dans ds_list.
     result = []
     format_date = config.get('csv_date_format', "long")
-    format_value = asbool(config.get('csv_respect_locale', False))
-    date_locale = 'en_US'
+    respect_locale = asbool(config.get('csv_respect_locale', False))
 
-    # Au cas où la configuration serait changée dynamiquement.
-    if not format_value:
-        locale.setlocale(locale.LC_NUMERIC, 'C')
-        locale.setlocale(locale.LC_TIME, 'C')
-    else:
-        try:
-            lang = request.accept_language.best_matches()
-        except TypeError:
-            # Lorsque le thread n'a pas de "request" associée
-            # (ex: dans les tests unitaires), TypeError est levée.
-            lang = []
+    with RRDToolEnv((not respect_locale) and 'C' or None, timezone) as (date_locale, timezone):
+        delta = pytz.FixedOffset(-timezone)
 
-        for tentative_lang in lang:
-            try:
-                tentative_lang = tentative_lang.replace('-', '_')
-                # Pour le formattage des nombres.
-                locale.setlocale(locale.LC_NUMERIC, tentative_lang)
-                # Pour le formattage des dates/heures.
-                locale.setlocale(locale.LC_TIME, tentative_lang)
-            except locale.Error:
-                pass
-            else:
-                LOGGER.debug(u"Preparing to format CSV values, "
-                            "using locale %r" % tentative_lang)
-                date_locale = tentative_lang
-                break
+        # Si la locale utilisée est la locale universelle ("C"),
+        # alors le formatage réelle des dates sera fait en utilisant
+        # le format américain (Babel ne supporte pas la locale "C").
+        if date_locale == 'C':
+            date_locale = 'en_US'
 
-    for ds in ds_list:
-        tmp_rrd = RRD(filename=ds_map[ds], server=server)
-        # Récupère les données de l'indicateur sous la forme suivante :
-        # dict(timestamp1=[valeur1], timestamp2=[valeur2], ...)
-        # Les valeurs sont des listes car un fichier peut potentiellement
-        # contenir plusieurs indicateurs. Ce n'est pas le cas sur Vigilo
-        # où la liste de valeurs contiendra TOUJOURS une seule valeur.
-        values_ind = tmp_rrd.fetchData(
-            ds_names=['DS'], start_a=start, end_a=end)
+        for ds in ds_list:
+            tmp_rrd = RRD(filename=ds_map[ds], server=server)
+            # Récupère les données de l'indicateur sous la forme suivante :
+            # dict(timestamp1=[valeur1], timestamp2=[valeur2], ...)
+            # Les valeurs sont des listes car un fichier peut potentiellement
+            # contenir plusieurs indicateurs. Ce n'est pas le cas sur Vigilo
+            # où la liste de valeurs contiendra TOUJOURS une seule valeur.
+            values_ind = tmp_rrd.fetchData(
+                ds_names=['DS'], start_a=start, end_a=end)
 
-        for index, timestamp in enumerate(values_ind):
-            # Si l'index n'existe pas encore dans le résultat,
-            # c'est qu'il s'agit du premier indicateur que l'on traite.
-            # On ajoute donc le timestamp à la liste avant tout.
-            if len(result) <= index:
-                # Le timestamp est ajouté, une première fois sous forme
-                # d'horodatage UNIX à destination de scripts et une seconde
-                # fois sous forme textuelle à destination des exploitants.
+            for index, timestamp in enumerate(values_ind):
+                # Si l'index n'existe pas encore dans le résultat,
+                # c'est qu'il s'agit du premier indicateur que l'on traite.
+                # On ajoute donc le timestamp à la liste avant tout.
+                if len(result) <= index:
+                    # Le timestamp est ajouté, une première fois sous forme
+                    # d'horodatage UNIX à destination de scripts et une seconde
+                    # fois sous forme textuelle à destination des exploitants.
 
-                # 1. On convertit le timestamp depuis UTC vers le fuseau
-                #    horaire donné par le navigateur de l'utilisateur.
-                date = pytz.utc.localize(datetime.datetime.utcfromtimestamp(
-                            timestamp)).astimezone(delta)
-                # 2. On utilise la représentation des dates/heures issue
-                #    de la locale de l'utilisateur (ou "en_US" par défaut).
-                date = babel.dates.format_datetime(date, format_date,
-                            locale=date_locale)
-                result.append([timestamp, date])
+                    # 1. On convertit le timestamp depuis UTC vers le fuseau
+                    #    horaire donné par le navigateur de l'utilisateur.
+                    date = pytz.utc.localize(datetime.datetime.utcfromtimestamp(
+                                timestamp)).astimezone(delta)
+                    # 2. On utilise la représentation des dates/heures issue
+                    #    de la locale de l'utilisateur (ou "en_US" par défaut).
+                    date = babel.dates.format_datetime(date, format_date,
+                                locale=date_locale)
+                    result.append([timestamp, date])
 
-            # On prépare le format adéquat en fonction du type de la valeur.
-            # Le formattage tiendra compte de la locale.
-            # Exemples pour le français :
-            #   int(1234) -> "1 234"
-            #   float(1234.56) -> "1234,56"
-            format_for_value = isinstance(values_ind[timestamp][0], int) and \
-                '%d' or '%f'
-            value = (values_ind[timestamp][0] is not None) and \
-                locale.format(format_for_value, values_ind[timestamp][0]) or \
-                None
-            result[index].append(value)
+                # On prépare le format adéquat en fonction du type de la valeur.
+                # Le formattage tiendra compte de la locale.
+                # Exemples pour le français :
+                #   int(1234) -> "1 234"
+                #   float(1234.56) -> "1234,56"
+                format_for_value = isinstance(values_ind[timestamp][0], int) and \
+                    '%d' or '%f'
+                value = (values_ind[timestamp][0] is not None) and \
+                    locale.format(format_for_value, values_ind[timestamp][0]) or \
+                    None
+                result[index].append(value)
 
     # On trie les valeurs par horodatage ascendant.
     result = sorted(result, key=lambda r: int(r[0]))
@@ -353,6 +468,13 @@ def getExportFileName(host, ds_graph, start, end, timezone):
 
     # plage temps sous forme texte
     format = '%Y/%m/%d-%H:%M:%S'
+
+    if timezone is None:
+        if time.daylight and time.localtime().tm_isdst:
+            timezone = -time.altzone / 60
+        else:
+            timezone = -time.timezone / 60
+
     delta = pytz.FixedOffset(-timezone)
 
     dt = pytz.utc.localize(datetime.datetime.utcfromtimestamp(
@@ -604,214 +726,153 @@ class RRD(object):
             (p.ex. 60 = UTC+01).
         @type timezone: C{int}
         """
-        if outfile != "-":
-            imgdir = os.path.dirname(outfile)
-            if not os.path.exists(imgdir):
-                os.makedirs(imgdir)
+        with RRDToolEnv(None, timezone):
+            if outfile != "-":
+                imgdir = os.path.dirname(outfile)
+                if not os.path.exists(imgdir):
+                    os.makedirs(imgdir)
 
-        # La variable TZ utilise la convention POSIX
-        # (ie. la direction du temps est inversée).
-        if timezone < 0:
-            # Python suit la définition mathématique de la division
-            # euclidienne et du modulo, ce qui ne nous arrange pas ici.
-            tz_hours = (-timezone) / 60
-            tz_mins  = (-timezone) % 60
-        else:
-            tz_hours = -(timezone / 60)
-            tz_mins  = -(timezone % 60)
+            start_i = int(start)
+            if start_i == 0:
+                start_i = int((int(time.time())) - 24*3600 - 1)
 
-        # On positionne TZ à un fuseau horaire
-        # du type "UTC-01" ou encore "UTC+09:30".
-        # Cette variable permet de changer l'interprétation des horodatages
-        # donnés en entrée pour que rrdtool ajuste les dates/heures.
-        # Méthode non thread-safe, mais c'est la seule reconnue par rrdtool.
-        old_tz = os.environ.get('TZ')
-        os.environ['TZ'] = 'UTC%+03d%s' % (
-            tz_hours,
-            tz_mins and (":%02d" % tz_mins) or ""
-        )
+            duration_i = int(duration)
+            if duration_i == 0:
+                end_i = int(time.time())
+            else:
+                end_i = int(start_i + duration_i)
+            # Compute the x-axis labels
+            duration_i = end_i - start_i
 
-        # On choisit la langue qui sera utilisée pour le rendu.
-        try:
-            lang = request.accept_language.best_matches()
-        except TypeError:
-            # Lorsque le thread n'a pas de "request" associée
-            # (ex: dans les tests unitaires), TypeError est levée.
-            lang = None
+            #if duration_i <= 7 * 3600:
+            #    xgrid = "MINUTE:30:HOUR:1:HOUR:1:0:%d/%m %Hh"
+            #elif duration_i > 7 * 3600 and duration_i <= 25 * 3600:
+            #    xgrid = "HOUR:1:HOUR:6:HOUR:6:0:%d/%m %Hh"
+            #elif duration_i > 25 * 3600 and duration_i <= 8 * 24 * 3600:
+            #    xgrid = "HOUR:6:DAY:1:DAY:1:0:%d/%m"
+            #elif duration_i > 8 * 24 * 3600 and duration_i <= 15 * 24 * 3600:
+            #    xgrid = "DAY:1:DAY:2:DAY:2:0:%d/%m"
+            #elif duration_i > 15 * 24 * 3600 and duration_i <= 4 * 31  * 24 * 3600:
+            #    xgrid = "DAY:5:DAY:10:DAY:10:0:%d/%m"
+            #else:
+            #    xgrid = "WEEK:2:MONTH:1:MONTH:1:0:%b"
+            a = [
+                    str(outfile),
+                    #"--step", str(step),
+                    #"--x-grid", xgrid,
+                    "--start", str(start_i),
+                    "--end", str(end_i),
+                    "--imgformat", format,
+            ]
+            if "min" in template:
+                a.extend(["-l", str(template["min"])])
+            if "max" in template:
+                a.extend(["-u", str(template["max"])])
+            if "options" in template:
+                for option in template["options"]:
+                    a.append(option)
 
-        if lang:
-            selected_locale = lang[0].replace('-', '_')
-            if "_" not in selected_locale:
-                selected_locale = "%s_%s" % (selected_locale,
-                                             selected_locale.upper())
-            # On force l'utilisation d'une locale UTF-8 pour rrdtool.
-            # Cf. http://bugs.debian.org/cgi-bin/bugreport.cgi?bug=493553
-            selected_locale += '.utf8'
-            LOGGER.debug(u"Trying to set rrdtool's locale to %s" %
-                selected_locale)
+            a.append("--title")
+            if not details:
+                a.append(template["name"])
+                a.append("--no-legend")
+    #            a.append("--only-graph")
+                a.append("--width")
+                a.append(250)
+                a.append("--height")
+                a.append(64)
+            else:
+                if len(self.server) > 35:
+                    ellipsis_server = self.server[:15] + '(...)' + \
+                                        self.server[-15:]
+                else:
+                    ellipsis_server = self.server
+                a.append("%s: %s" % (ellipsis_server, template["name"]))
+                a.append("--width")
+                a.append(self.host.width)
+                a.append("--height")
+                a.append(self.host.height)
+                a.append("--vertical-label")
+                a.append(template["vlabel"])
+                a.append("TEXTALIGN:left")
+            if lazy:
+                a.append("--lazy")
+            # Curve smoothing
+            a.append("-E")
 
-            # On supprime les variables d'environnement susceptibles d'avoir
-            # la priorité sur LC_TIME lors du choix de la locale.
-            for env_var in ('LC_ALL', 'LANGUAGE', 'LANG'):
-                if env_var in os.environ:
-                    del os.environ[env_var]
+            # Calcul du label le plus long
+            labels = []
+            for d in ds_list:
+                label = d.label
+                if not label:
+                    label = d.name
+                labels.append(len(label))
+            justify = max(labels)
 
-            # On doit manipuler à la fois os.environ et setlocale()
-            # pour changer la locale du processus courant mais aussi
-            # celle des sous-processus qu'il crée.
+            # Ajoute la date de début et de fin avant la légende, centrées.
+            # Le format par défaut est celui le plus adapté à la locale.
+            format_date = config.get(
+                    'graph_date_format',
+                    locale.nl_langinfo(locale.D_T_FMT)
+                ).encode('utf-8')
+
+            # Le caractère ":" est réservé dans rrdtool et doit être échappé.
+            # Le rstrip() permet de supprimer un espace présent en trop à la fin
+            # du texte, lié à l'absence de fuseau horaire et à la présence du
+            # format %Z par défaut dans la plupart des locales.
+            start_date = datetime.datetime.fromtimestamp(
+                start_i).strftime(format_date).replace(':', '\\:').rstrip()
+            end_date = datetime.datetime.fromtimestamp(
+                end_i).strftime(format_date).replace(':', '\\:').rstrip()
+            a.append(
+                (
+                    'COMMENT:' + (_('From "%(start)s" to "%(end)s"') % {
+                        'start': start_date.decode('utf-8'),
+                        'end': end_date.decode('utf-8'),
+                    }) + '\\c'
+                ).encode('utf-8')
+            )
+            a.append("COMMENT:  \\n")
+
+            # Tabs (legend)
+            s = "COMMENT:%s" % (" " * (justify + 1))
+            for tab in template["tabs"]:
+                # if we have a nicer label, use it
+                if tab in config.static_labels:
+                    tabstr = config.static_labels[tab]
+                else:
+                    # if we dont, too bad, just print it.
+                    tabstr = tab
+                s += " "*7 + tabstr.strip() # align it
+
+            a.append(str(s)+"\\n")
+
+            defs = []
+            for i in range(len(ds_list)):
+                defs.extend(self.get_def(ds_list, i, template, start))
             try:
-                locale.setlocale(locale.LC_TIME, selected_locale)
-                os.environ['LC_TIME'] = selected_locale
-            except locale.Error:
-                pass # locale non supportée, c'est pas grave
+                defs = self._sort_defs(defs, ds_list)
+            except nx.NetworkXUnfeasible, e:
+                try:
+                    error_message = unicode(e)
+                except UnicodeDecodeError:
+                    error_message = unicode(str(e), 'utf-8', 'replace')
+                LOGGER.error(_("Can't sort DS dependencies"))
+            a.extend(defs)
 
-        start_i = int(start)
-        if start_i == 0:
-            start_i = int((int(time.time())) - 24*3600 - 1)
+            for i, d in enumerate(ds_list):
+                if "last_is_max" in template and template["last_is_max"] \
+                        and i == len(ds_list)-1:
+                    is_max = True
+                else:
+                    is_max = False
+                a.extend(self.get_graph_cmd_for_ds(d, i, template, is_max, justify))
 
-        duration_i = int(duration)
-        if duration_i == 0:
-            end_i = int(time.time())
-        else:
-            end_i = int(start_i + duration_i)
-        # Compute the x-axis labels
-        duration_i = end_i - start_i
+            # rrdtool.graph() ne sait manipuler que le type <str>.
+            a = [isinstance(e, unicode) and e.encode('utf-8') or str(e) for e in a]
+            LOGGER.debug("rrdtool graph '%s'" % "' '".join(a))
 
-        #if duration_i <= 7 * 3600:
-        #    xgrid = "MINUTE:30:HOUR:1:HOUR:1:0:%d/%m %Hh"
-        #elif duration_i > 7 * 3600 and duration_i <= 25 * 3600:
-        #    xgrid = "HOUR:1:HOUR:6:HOUR:6:0:%d/%m %Hh"
-        #elif duration_i > 25 * 3600 and duration_i <= 8 * 24 * 3600:
-        #    xgrid = "HOUR:6:DAY:1:DAY:1:0:%d/%m"
-        #elif duration_i > 8 * 24 * 3600 and duration_i <= 15 * 24 * 3600:
-        #    xgrid = "DAY:1:DAY:2:DAY:2:0:%d/%m"
-        #elif duration_i > 15 * 24 * 3600 and duration_i <= 4 * 31  * 24 * 3600:
-        #    xgrid = "DAY:5:DAY:10:DAY:10:0:%d/%m"
-        #else:
-        #    xgrid = "WEEK:2:MONTH:1:MONTH:1:0:%b"
-        a = [
-                str(outfile),
-                #"--step", str(step),
-                #"--x-grid", xgrid,
-                "--start", str(start_i),
-                "--end", str(end_i),
-                "--imgformat", format,
-        ]
-        if "min" in template:
-            a.extend(["-l", str(template["min"])])
-        if "max" in template:
-            a.extend(["-u", str(template["max"])])
-        if "options" in template:
-            for option in template["options"]:
-                a.append(option)
-
-        a.append("--title")
-        if not details:
-            a.append(template["name"])
-            a.append("--no-legend")
-#            a.append("--only-graph")
-            a.append("--width")
-            a.append(250)
-            a.append("--height")
-            a.append(64)
-        else:
-            if len(self.server) > 35:
-                ellipsis_server = self.server[:15] + '(...)' + \
-                                    self.server[-15:]
-            else:
-                ellipsis_server = self.server
-            a.append("%s: %s" % (ellipsis_server, template["name"]))
-            a.append("--width")
-            a.append(self.host.width)
-            a.append("--height")
-            a.append(self.host.height)
-            a.append("--vertical-label")
-            a.append(template["vlabel"])
-            a.append("TEXTALIGN:left")
-        if lazy:
-            a.append("--lazy")
-        # Curve smoothing
-        a.append("-E")
-
-        # Calcul du label le plus long
-        labels = []
-        for d in ds_list:
-            label = d.label
-            if not label:
-                label = d.name
-            labels.append(len(label))
-        justify = max(labels)
-
-        # Ajoute la date de début et de fin avant la légende, centrées.
-        # Le format par défaut est celui le plus adapté à la locale.
-        format_date = config.get(
-                'graph_date_format',
-                locale.nl_langinfo(locale.D_T_FMT)
-            ).encode('utf-8')
-
-        # Le caractère ":" est réservé dans rrdtool et doit être échappé.
-        # Le rstrip() permet de supprimer un espace présent en trop à la fin
-        # du texte, lié à l'absence de fuseau horaire et à la présence du
-        # format %Z par défaut dans la plupart des locales.
-        start_date = datetime.datetime.fromtimestamp(
-            start_i).strftime(format_date).replace(':', '\\:').rstrip()
-        end_date = datetime.datetime.fromtimestamp(
-            end_i).strftime(format_date).replace(':', '\\:').rstrip()
-        a.append(
-            (
-                'COMMENT:' + (_('From "%(start)s" to "%(end)s"') % {
-                    'start': start_date.decode('utf-8'),
-                    'end': end_date.decode('utf-8'),
-                }) + '\\c'
-            ).encode('utf-8')
-        )
-        a.append("COMMENT:  \\n")
-
-        # Tabs (legend)
-        s = "COMMENT:%s" % (" " * (justify + 1))
-        for tab in template["tabs"]:
-            # if we have a nicer label, use it
-            if tab in config.static_labels:
-                tabstr = config.static_labels[tab]
-            else:
-                # if we dont, too bad, just print it.
-                tabstr = tab
-            s += " "*7 + tabstr.strip() # align it
-
-        a.append(str(s)+"\\n")
-
-        defs = []
-        for i in range(len(ds_list)):
-            defs.extend(self.get_def(ds_list, i, template, start))
-        try:
-            defs = self._sort_defs(defs, ds_list)
-        except nx.NetworkXUnfeasible, e:
-            try:
-                error_message = unicode(e)
-            except UnicodeDecodeError:
-                error_message = unicode(str(e), 'utf-8', 'replace')
-            LOGGER.error(_("Can't sort DS dependencies"))
-        a.extend(defs)
-
-        for i, d in enumerate(ds_list):
-            if "last_is_max" in template and template["last_is_max"] \
-                    and i == len(ds_list)-1:
-                is_max = True
-            else:
-                is_max = False
-            a.extend(self.get_graph_cmd_for_ds(d, i, template, is_max, justify))
-
-        # rrdtool.graph() ne sait manipuler que le type <str>.
-        a = [isinstance(e, unicode) and e.encode('utf-8') or str(e) for e in a]
-        LOGGER.debug("rrdtool graph '%s'" % "' '".join(a))
-
-        rrdtool.graph(*a)
-        # Restaure la valeur précédente de TZ
-        # (non thread-safe, mais évite de trop polluer Python).
-        if old_tz is None:
-            del os.environ['TZ']
-        else:
-            os.environ['TZ'] = old_tz
+            rrdtool.graph(*a)
 
     def _sort_defs(self, defs, ds_list):
         """
