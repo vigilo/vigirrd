@@ -26,7 +26,6 @@ Requires:   vigilo-turbogears
 Requires:   rrdtool-python26 >= 1.3
 Requires:   python26-simplejson
 Requires:   dejavu-lgc-fonts
-Requires:   python26-mod_wsgi
 Requires:   python26-pytz
 
 # For the api doc generation
@@ -34,16 +33,9 @@ Requires:   python26-pytz
 
 # VigiConf
 Requires:   vigilo-vigiconf-local
-Obsoletes:  %{name}-confmgr < 1.13-2
-Provides:   %{name}-confmgr = %{version}-%{release}
-Obsoletes:  %{name}-vigiconf < 2.0.0-2
-Provides:   %{name}-vigiconf = %{version}-%{release}
 
 # Pour l'utilisateur vigilo-metro
 Requires(pre):   vigilo-connector-metro
-
-Obsoletes:  vigilo-rrdgraph <= 2.0.1
-Provides:   vigilo-rrdgraph = %{version}-%{release}
 
 
 %description
