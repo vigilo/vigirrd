@@ -1,0 +1,1 @@
+vigirrd.rhel6.spec
