@@ -6,7 +6,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: vigirrd 2.0.0\n"
-"Report-Msgid-Bugs-To: contact@projet-vigilo.org\n"
+"Report-Msgid-Bugs-To: contact.vigilo@c-s.fr\n"
 "POT-Creation-Date: 2010-05-12 11:49+0200\n"
 "PO-Revision-Date: 2012-05-30 15:43+0200\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
