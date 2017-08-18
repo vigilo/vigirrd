@@ -78,17 +78,6 @@ def reload():
     settings.load_file(tpl_path)
     MTIMES[tpl_path] = current_timestamp
     templates = settings.get("templates", {})
-    #files = glob.glob(os.path.join(
-    #                config.get("conf_dir", "/etc/vigilo/vigirrd"), "*.py"))
-    #files.sort()
-    #for f in files:
-    #    LOGGER.debug("Trying to read file %s" % f)
-    #    try:
-    #        settings.load_file(f)
-    #    except Exception, e:
-    #        LOGGER.error("Error while parsing %s: %s\n" % (f, str(e)))
-    #del files
-    #templates = settings.get("templates", {})
 
 # pylint: disable-msg=C0103
 settings = Settings()

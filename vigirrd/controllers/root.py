@@ -165,9 +165,9 @@ class RootController(BaseController):
             rrd.showMergedRRDs(kwargs["host"], kwargs["graphtemplate"],
                                image_file, start, duration, details=details,
                                timezone=timezone)
-        except rrd.RRDNoDSError, e:
+        except rrd.RRDNoDSError as e:
             raise HTTPServiceUnavailable(str(e))
-        except rrd.RRDNotFoundError, e:
+        except rrd.RRDNotFoundError as e:
             raise HTTPNotFound("No RRD: %s" % str(e))
 
         if request.response_type == 'image/png':

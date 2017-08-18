@@ -244,7 +244,7 @@ def showMergedRRDs(server, template_name, outfile='-',
     """showMergedRRDs"""
     host = Host.by_name(server)
     if host is None:
-        raise RRDNotFoundError, server
+        raise RRDNotFoundError(server)
     graph = Graph.by_host_and_name(host, template_name)
     if graph is None:
         LOGGER.error("ERROR: The template '%(template)s' does not exist. "
@@ -846,7 +846,7 @@ class RRD(object):
                 defs.extend(self.get_def(ds_list, i, template, start))
             try:
                 defs = self._sort_defs(defs, ds_list)
-            except nx.NetworkXUnfeasible, e:
+            except nx.NetworkXUnfeasible as e:
                 try:
                     error_message = unicode(e)
                 except UnicodeDecodeError:

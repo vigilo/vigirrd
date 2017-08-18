@@ -4,6 +4,7 @@
 # Copyright (C) 2006-2016 CS-SI
 # License: GNU GPL v2 <http://www.gnu.org/licenses/gpl-2.0.html>
 
+from __future__ import print_function
 import os
 import time
 import tempfile
@@ -231,9 +232,9 @@ class SortDSTestCase(TestController):
         for i in range(len(ds_list)):
             defs.extend(self.rrd.get_def(ds_list, i, self.template,
                                          int(time.time())))
-        print "defs:", defs
+        print("defs:", defs)
         sorted_defs = self.rrd._sort_defs(defs, ds_list)
-        print "sorted:", sorted_defs
+        print("sorted:", sorted_defs)
         return sorted_defs
 
     def test_no_deps(self):

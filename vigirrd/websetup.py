@@ -4,6 +4,7 @@
 
 """Setup the vigirrd application"""
 
+from __future__ import print_function
 import imp
 import logging
 
@@ -26,7 +27,7 @@ def setup_app(command, conf, variables):
 
     # Load the models
     from vigirrd import model
-    print "Creating tables"
+    print("Creating tables")
     model.metadata.create_all(bind=config['pylons.app_globals'].sa_engine)
     transaction.commit()
-    print "Successfully setup"
+    print("Successfully setup")
