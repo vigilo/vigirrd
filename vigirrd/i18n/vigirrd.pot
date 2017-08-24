@@ -1,14 +1,14 @@
 # Translations template for vigilo-vigirrd.
-# Copyright (C) 2012 ORGANIZATION
+# Copyright (C) 2017 ORGANIZATION
 # This file is distributed under the same license as the vigilo-vigirrd project.
-# FIRST AUTHOR <EMAIL@ADDRESS>, 2012.
+# FIRST AUTHOR <EMAIL@ADDRESS>, 2017.
 #
 #, fuzzy
 msgid ""
 msgstr ""
-"Project-Id-Version: vigilo-vigirrd 2.0.16\n"
+"Project-Id-Version: vigilo-vigirrd 4.1.0rc2\n"
 "Report-Msgid-Bugs-To: contact.vigilo@c-s.fr\n"
-"POT-Creation-Date: 2012-05-30 15:43+0200\n"
+"POT-Creation-Date: 2017-08-24 12:17+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -17,17 +17,17 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Generated-By: Babel 0.9.4\n"
 
-#: vigirrd/controllers/root.py:55
+#: vigirrd/controllers/root.py:56
 #, python-format
 msgid "No access to the rrdcached socket: %s"
 msgstr ""
 
-#: vigirrd/lib/rrd.py:723
+#: vigirrd/lib/rrd.py:823
 #, python-format
 msgid "From \"%(start)s\" to \"%(end)s\""
 msgstr ""
 
-#: vigirrd/lib/rrd.py:755
+#: vigirrd/lib/rrd.py:854
 msgid "Can't sort DS dependencies"
 msgstr ""
 
