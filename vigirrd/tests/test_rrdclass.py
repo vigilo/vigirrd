@@ -330,7 +330,7 @@ class TestRRDclassCF(TestController):
 
         # Récupération de la fonction de consolidation pour l'archive
         # la plus précise : il doit s'agir de "LAST".
-        self.assertEquals(rrdfile.getPeriodCF(ts - 1 * days), "LAST")
+        self.assertEqual(rrdfile.getPeriodCF(ts - 1 * days), "LAST")
 
         # En revanche, pour l'archive juste après, il doit s'agit d' "AVERAGE".
-        self.assertEquals(rrdfile.getPeriodCF(ts - 3 * days), "AVERAGE")
+        self.assertEqual(rrdfile.getPeriodCF(ts - 3 * days), "AVERAGE")
