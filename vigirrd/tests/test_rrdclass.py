@@ -180,11 +180,11 @@ class TestRRDclass(TestController):
 
         csv_data = """
 "Timestamp";"Date";"sysUpTime"
-"1232000001";"January 15, 2009 6:13:21 AM +0000";"9658471.000000"
-"1232001801";"January 15, 2009 6:43:21 AM +0000";"9660271.000000"
-"1232003601";"January 15, 2009 7:13:21 AM +0000";"9662071.000000"
-"1232005401";"January 15, 2009 7:43:21 AM +0000";"9663871.000000"
-"1232007201";"January 15, 2009 8:13:21 AM +0000";"9665671.000000"
+"1232000001";"January 15, 2009 at 6:13:21 AM +0000";"9658471.000000"
+"1232001801";"January 15, 2009 at 6:43:21 AM +0000";"9660271.000000"
+"1232003601";"January 15, 2009 at 7:13:21 AM +0000";"9662071.000000"
+"1232005401";"January 15, 2009 at 7:43:21 AM +0000";"9663871.000000"
+"1232007201";"January 15, 2009 at 8:13:21 AM +0000";"9665671.000000"
 """[1:]
 
         wsgiapp = CallWrapperApp(rrd, rrd.exportCSV,
@@ -196,7 +196,14 @@ class TestRRDclass(TestController):
 
         # On compare l'export au résultat attendu.
         normalized_output = output.replace("\r\n", "\n")
-        self.assertEqual(csv_data, normalized_output)
+
+        # Selon les versions de Babel utilisées, les dates contiennent
+        # " at " en tant que séparateur entre la date date et l'heure,
+        # ou bien n'ont aucun séparateur particulier. On teste les 2 cas.
+        try:
+            self.assertEqual(csv_data, normalized_output)
+        except AssertionError:
+            self.assertEqual(csv_data.replace(" at ", " "), normalized_output)
 
 
 
