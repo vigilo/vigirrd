@@ -72,8 +72,13 @@ class TestExportCSV(TestController):
         self.assertEqual(rows[1][0],   '"%d"' % (start + 1))
         # La dernière mesure a été prise 5 mins avant la fin de l'heure.
         self.assertEqual(rows[-1][0],  '"%d"' % (start + 3600 - 300 + 1))
-        self.assertEqual(rows[1][1],   '"January 24, 2009 10:08:05 AM +0100"')
-        self.assertEqual(rows[-1][1],  '"January 24, 2009 11:03:05 AM +0100"')
+        # Support des différentes versions de Babel
+        try:
+            self.assertEqual(rows[1][1],   '"January 24, 2009 10:08:05 AM +0100"')
+            self.assertEqual(rows[-1][1],  '"January 24, 2009 11:03:05 AM +0100"')
+        except AssertionError:
+            self.assertEqual(rows[1][1],   '"January 24, 2009 at 10:08:05 AM +0100"')
+            self.assertEqual(rows[-1][1],  '"January 24, 2009 at 11:03:05 AM +0100"')
 
     def test_export_using_default_values(self):
         """Export CSV sans 'start' ni 'end'"""
