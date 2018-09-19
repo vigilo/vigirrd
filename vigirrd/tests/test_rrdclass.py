@@ -11,6 +11,7 @@ import tempfile
 import shutil
 from unittest import TestCase
 from types import ModuleType
+from datetime import datetime
 
 import networkx as nx
 from tg.util import ContextObj
@@ -19,6 +20,8 @@ from tg.support.registry import StackedObjectProxy, RegistryManager
 from tg.wsgiapp import RequestLocals
 from tg.i18n import _get_translator
 from webtest import TestApp
+import pytz
+import babel.dates
 
 from vigilo.common import get_rrd_path
 from vigirrd import model
@@ -178,14 +181,25 @@ class TestRRDclass(TestController):
         start = 1232000000
         end = 1232010000
 
+        # Permet de gommer les différences de formatage des dates
+        # liées aux changements de version de Babel.
+        date_formatter = lambda ts: babel.dates.format_datetime(
+            pytz.utc.localize(
+                datetime.utcfromtimestamp(ts)
+            ).astimezone(pytz.FixedOffset(0)),
+            'long', locale='en_US')
+        dates = map(date_formatter, [1232000001, 1232001801, 1232003601, 1232005401, 1232007201])
+
+        # La sortie attendue est la suivante :
         csv_data = """
 "Timestamp";"Date";"sysUpTime"
-"1232000001";"January 15, 2009 at 6:13:21 AM +0000";"9658471.000000"
-"1232001801";"January 15, 2009 at 6:43:21 AM +0000";"9660271.000000"
-"1232003601";"January 15, 2009 at 7:13:21 AM +0000";"9662071.000000"
-"1232005401";"January 15, 2009 at 7:43:21 AM +0000";"9663871.000000"
-"1232007201";"January 15, 2009 at 8:13:21 AM +0000";"9665671.000000"
-"""[1:]
+"1232000001";"%s";"9658471.000000"
+"1232001801";"%s";"9660271.000000"
+"1232003601";"%s";"9662071.000000"
+"1232005401";"%s";"9663871.000000"
+"1232007201";"%s";"9665671.000000"
+"""
+        csv_data = csv_data[1:] % tuple(dates)
 
         wsgiapp = CallWrapperApp(rrd, rrd.exportCSV,
                                  server, graphtemplate,
@@ -196,14 +210,7 @@ class TestRRDclass(TestController):
 
         # On compare l'export au résultat attendu.
         normalized_output = output.replace("\r\n", "\n")
-
-        # Selon les versions de Babel utilisées, les dates contiennent
-        # " at " en tant que séparateur entre la date date et l'heure,
-        # ou bien n'ont aucun séparateur particulier. On teste les 2 cas.
-        try:
-            self.assertEqual(csv_data, normalized_output)
-        except AssertionError:
-            self.assertEqual(csv_data.replace(" at ", " "), normalized_output)
+        self.assertEqual(csv_data, normalized_output)
 
 
 
