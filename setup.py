@@ -12,7 +12,7 @@ except ImportError:
     use_setuptools()
     from setuptools import setup, find_packages
 
-tests_require = ['WebTest', 'BeautifulSoup']
+tests_require = ['WebOb < 1.0', 'WebTest', 'BeautifulSoup']
 
 sysconfdir = os.getenv("SYSCONFDIR", "/etc")
 cronext = os.getenv("CRONEXT", ".cron")
