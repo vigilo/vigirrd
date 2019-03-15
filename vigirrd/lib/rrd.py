@@ -399,8 +399,11 @@ def exportCSV(server, graphtemplate, ds, start, end, timezone):
                                 timestamp)).astimezone(delta)
                     # 2. On utilise la représentation des dates/heures issue
                     #    de la locale de l'utilisateur (ou "en_US" par défaut).
-                    date = babel.dates.format_datetime(date, format_date,
-                                locale=date_locale)
+                    if not date_locale:
+                        date = babel.dates.format_datetime(date, format_date)
+                    else:
+                        date = babel.dates.format_datetime(date, format_date,
+                                    locale=date_locale)
                     result.append([timestamp, date])
 
                 # On prépare le format adéquat en fonction du type de la valeur.
