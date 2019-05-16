@@ -118,13 +118,10 @@ class RRDToolEnv(object):
         # Correction du décalage horaire.
         tzoffset = self._tzoffset
         if tzoffset is None:
-            # Note: la variable TZ utilise la convention POSIX
-            #       (ie. la direction du temps est inversée).
-            if time.daylight and time.localtime().tm_isdst:
-                tzoffset = -time.altzone / 60
-            else:
-                tzoffset = -time.timezone / 60
+            tzoffset = get_local_tzoffset()
 
+        # Note: la variable TZ utilise la convention POSIX
+        #       (ie. la direction du temps est inversée).
         if tzoffset > 0:
             # Python suit la définition mathématique de la division
             # euclidienne et du modulo, ce qui ne nous arrange pas ici.
@@ -162,6 +159,15 @@ class RRDToolEnv(object):
         _LOCK.release()
         LOGGER.debug(u"RRDtool environment destroyed")
 
+def get_local_tzoffset():
+    # Les informations du module time (daylight, altzone et timezone)
+    # sont parfois erronées. Cf. https://bugs.python.org/issue1647654.
+    # On contourne le problème en déduisant l'offset de la timezone
+    # locale en comparant des objets datetime "naïfs".
+    naive = int(time.time())
+    tzoffset = datetime.datetime.fromtimestamp(naive) - \
+               datetime.datetime.utcfromtimestamp(naive)
+    return (tzoffset.days * 86400 + tzoffset.seconds) / 60
 
 def dateToDateObj(date):
     """
@@ -467,10 +473,7 @@ def getExportFileName(host, ds_graph, start, end, timezone):
     format = '%Y/%m/%d-%H:%M:%S'
 
     if timezone is None:
-        if time.daylight and time.localtime().tm_isdst:
-            timezone = -time.altzone / 60
-        else:
-            timezone = -time.timezone / 60
+        timezone = -get_local_tzoffset()
 
     delta = pytz.FixedOffset(-timezone)
 
@@ -488,10 +491,7 @@ def getExportFileName(host, ds_graph, start, end, timezone):
     # nom fichier
     filename = '%s - %s (%s - %s)' % (host, ds_graph, str_start, str_end)
     filename = filename.encode('backslash')
-
-    # extension
     filename += ".csv"
-
     return filename
 
 
