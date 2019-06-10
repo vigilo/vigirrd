@@ -193,7 +193,7 @@ def dateToTimestamp(date):
     @return: Timestamp UNIX équivalent à la date donnée.
     @rtype: C{int}
     """
-    return time.mktime(dateToDateObj(date).timetuple())
+    return calendar.timegm(dateToDateObj(date).utctimetuple())
 
 def listFiles(host):
     """
@@ -536,7 +536,7 @@ class RRD(object):
         """
         infos = rrdtool.info(self.filename)
         step = infos['step']
-        now = time.mktime(datetime.datetime.utcnow().timetuple())
+        now = calendar.timegm(datetime.datetime.utcnow().utctimetuple())
         i = 0
         rras = []
         while ('rra[%d].cf' % i) in infos:
@@ -817,9 +817,9 @@ class RRD(object):
             # Le rstrip() permet de supprimer un espace présent en trop à la fin
             # du texte, lié à l'absence de fuseau horaire et à la présence du
             # format %Z par défaut dans la plupart des locales.
-            start_date = datetime.datetime.fromtimestamp(
+            start_date = datetime.datetime.utcfromtimestamp(
                 start_i).strftime(format_date).replace(':', '\\:').rstrip()
-            end_date = datetime.datetime.fromtimestamp(
+            end_date = datetime.datetime.utcfromtimestamp(
                 end_i).strftime(format_date).replace(':', '\\:').rstrip()
             a.append(
                 (
