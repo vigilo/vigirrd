@@ -152,12 +152,13 @@ class RootController(BaseController):
         if start < 0:
             start = 0
 
-        filename = "%s_%s_%s_%s_%d.png" % (kwargs["host"],
+        filename = "%s_%s_%s_%s_%d_%s.png" % (kwargs["host"],
                                            re.sub(r"[^\w]", "",
                                                 kwargs["graphtemplate"]),
                                            start,
                                            duration,
-                                           int(details)
+                                           int(details),
+                                           str(timezone)
                                            )
         image_file = os.path.join(config.get("image_cache_dir"), filename)
 
