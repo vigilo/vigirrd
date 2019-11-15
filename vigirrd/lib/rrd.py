@@ -657,8 +657,7 @@ class RRD(object):
 
         info, ds_rrd, data = rrdtool.fetch(str(self.filename), cf,
                                    "--start", str(start), "--end", str(end))
-        #start_rrd = info[0]
-        #end_rrd = info[1]
+        tstamp = info[0]
         step = info[2]
 
         # put the mapping of indexes in the rrd to their place in the final list
@@ -669,7 +668,6 @@ class RRD(object):
                 ds_mapping[i] = ds_names.index(ds)
 
         # Create the data dict
-        tstamp = start + 1
         for line in data:
             # fill with 'None', len(ds_names) times
             values = [ None for i in ds_names ]
@@ -677,10 +675,12 @@ class RRD(object):
                 # we have a mapping for it, so store it
                 if ds_mapping.has_key(i):
                     values[ds_mapping[i]] = line[i]
-            res[tstamp] = values
-            tstamp = tstamp + step
-            if tstamp > end - step:
-                break
+            res[max( [tstamp, start] )] = values
+            tstamp += step
+
+        # Fill til the end of the requested time period
+        if res:
+            res[end] = values
 
         return res
 

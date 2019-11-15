@@ -109,29 +109,6 @@ class TestRRDclass(TestController):
 
         self.assertEqual(result, value, "getStartTime() does not work")
 
-    def test_fetchdata(self):
-        '''Récupération des données de métrologie d'une source.'''
-        answer = {
-            1232695200: [75141.386666999999, None],
-            1232697600: [77541.0, None],
-            1232696100: [76041.386666999999, None],
-            1232694600: [74541.386666999999, None],
-            1232697900: [77841.386666999999, None],
-            1232695500: [75442.0, None],
-            1232696400: [76342.0, None],
-            1232697000: [76942.0, None],
-            1232694900: [74841.613333000001, None],
-            1232695800: [75741.613333000001, None],
-            1232697300: [77241.613333000001, None],
-            1232696700: [76642.0, None],
-        }
-
-        result = None
-        if self.rrd is not None:
-            result = self.rrd.fetchData("DS")
-
-        self.assertEqual(result, answer, "fetchData() does not work")
-
     def test_graph(self):
         '''Génération d'un graphe à partir des données de métrologie.'''
         tmpdir = tempfile.mkdtemp()
@@ -170,47 +147,6 @@ class TestRRDclass(TestController):
             result = self.rrd.getLastValue("sysUpTime")
         answer = 2.9426086420138886
         self.assertEqual(result, answer, "getLastValue() does not work")
-
-    def test_exportCSV(self):
-        '''Export des données au format CSV.'''
-        server = 'testserver'
-        graphtemplate = 'UpTime'
-        indicator = 'All'
-        # On se place à un emplacement du fichier
-        # où l'on sait qu'il y a des données.
-        start = 1232000000
-        end = 1232010000
-
-        # Permet de gommer les différences de formatage des dates
-        # liées aux changements de version de Babel.
-        date_formatter = lambda ts: babel.dates.format_datetime(
-            pytz.utc.localize(
-                datetime.utcfromtimestamp(ts)
-            ).astimezone(pytz.FixedOffset(0)),
-            'long', locale='en_US')
-        dates = map(date_formatter, [1232000001, 1232001801, 1232003601, 1232005401, 1232007201])
-
-        # La sortie attendue est la suivante :
-        csv_data = """
-"Timestamp";"Date";"sysUpTime"
-"1232000001";"%s";"9658471.000000"
-"1232001801";"%s";"9660271.000000"
-"1232003601";"%s";"9662071.000000"
-"1232005401";"%s";"9663871.000000"
-"1232007201";"%s";"9665671.000000"
-"""
-        csv_data = csv_data[1:] % tuple(dates)
-
-        wsgiapp = CallWrapperApp(rrd, rrd.exportCSV,
-                                 server, graphtemplate,
-                                 indicator, start, end, 0)
-        wsgiapp = RegistryManager(wsgiapp)
-        app = TestApp(wsgiapp)
-        output = app.get('/').body
-
-        # On compare l'export au résultat attendu.
-        normalized_output = output.replace("\r\n", "\n")
-        self.assertEqual(csv_data, normalized_output)
 
 
 
