@@ -3,6 +3,8 @@
 # Copyright (C) 2007-2018 CS-SI
 # License: GNU GPL v2 <http://www.gnu.org/licenses/gpl-2.0.html>
 
+from __future__ import division
+
 """
 Composant Python pour afficher les données contenues dans des fichiers RRD
 """
@@ -120,24 +122,22 @@ class RRDToolEnv(object):
         if tzoffset is None:
             tzoffset = get_local_tzoffset()
 
-        # Note: la variable TZ utilise la convention POSIX
-        #       (ie. la direction du temps est inversée).
+        # Note: la variable TZ suit la convention POSIX (direction inversée).
+        #       ie. la France se trouve à UTC-01:00 ou UTC-02:00.
+        #       On doit donc inverser le signe du résultat avant utilisation.
         if tzoffset > 0:
-            # Python suit la définition mathématique de la division
-            # euclidienne et du modulo, ce qui ne nous arrange pas ici.
-            tz_hours = (-tzoffset) / 60
-            tz_mins  = (-tzoffset) % 60
+            tz_hours, tz_mins = divmod(tzoffset, 60)
+            tz_sign = '-'
         else:
-            tz_hours = -(-tzoffset / 60)
-            tz_mins  = -(-tzoffset % 60)
+            # Python suit la définition mathématique de la division euclidienne,
+            # et pas la définition usuelle en informatique. On utilise donc
+            # l'opposé de la valeur pour obtenir le résultat attendu.
+            tz_hours, tz_mins = divmod(-tzoffset, 60)
+            tz_sign = '+'
 
-        os.environ['TZ'] = 'UTC%+03d%s' % (
-            tz_hours,
-            tz_mins and (":%02d" % tz_mins) or ""
-        )
+        os.environ['TZ'] = 'UTC%s%02d:%02d' % (tz_sign, tz_hours, tz_mins)
         LOGGER.debug(u"RRDtool environment prepared with TZ=%r and locale=%r" %
                      (os.environ['TZ'], lang))
-
         return (lang, tzoffset)
 
     def __exit__(self, *_dummy):
@@ -159,6 +159,7 @@ class RRDToolEnv(object):
         _LOCK.release()
         LOGGER.debug(u"RRDtool environment destroyed")
 
+
 def get_local_tzoffset():
     # Les informations du module time (daylight, altzone et timezone)
     # sont parfois erronées. Cf. https://bugs.python.org/issue1647654.
@@ -167,7 +168,8 @@ def get_local_tzoffset():
     naive = int(time.time())
     tzoffset = datetime.datetime.fromtimestamp(naive) - \
                datetime.datetime.utcfromtimestamp(naive)
-    return (tzoffset.days * 86400 + tzoffset.seconds) / 60
+    return (tzoffset.days * 86400 + tzoffset.seconds) // 60
+
 
 def dateToDateObj(date):
     """
@@ -184,6 +186,7 @@ def dateToDateObj(date):
     dateobj = datetime.date(year, month, day)
     return dateobj
 
+
 def dateToTimestamp(date):
     """
     Transforme une date au format "AAAA-MM-JJ" en timestamp UNIX.
@@ -194,6 +197,7 @@ def dateToTimestamp(date):
     @rtype: C{int}
     """
     return time.mktime(dateToDateObj(date).timetuple())
+
 
 def listFiles(host):
     """
@@ -211,6 +215,7 @@ def listFiles(host):
     files.sort()
     return files
 
+
 def getStartTime(host):
     """Returns the timestamp of the first available data for the given host"""
     files = listFiles(host)
@@ -222,6 +227,7 @@ def getStartTime(host):
             continue
     raise RRDError("Can't find the first timestamp available "
                     "for host %s." % host)
+
 
 def listDS(files):
     """
@@ -244,6 +250,7 @@ def listDS(files):
                 list_l.append(ds)
     list_l.sort()
     return list_l
+
 
 def showMergedRRDs(server, template_name, outfile='-',
         start=0, duration=0, details=1, timezone=None):
@@ -279,6 +286,7 @@ def showMergedRRDs(server, template_name, outfile='-',
                   duration=duration, details=(int(details)==1),
                   timezone=timezone)
 
+
 def getEncodedFileName(server, ds):
     """
     Étant donné un nom d'hôte et un indicateur sur cet hôte,
@@ -301,6 +309,7 @@ def getEncodedFileName(server, ds):
                             path_mode=rrd_path_mode)
     return filename
 
+
 def convertToUTF8(input):
     """
     Convertit des éléments (ou des listes d'éléments) unicode en UTF8.
@@ -314,6 +323,7 @@ def convertToUTF8(input):
         return input.encode('utf-8')
     else:
         return input
+
 
 # VIGILO_EXIG_VIGILO_PERF_0040:Export des donnees d'un graphe au format CSV
 def exportCSV(server, graphtemplate, ds, start, end, timezone):
@@ -446,6 +456,7 @@ def exportCSV(server, graphtemplate, ds, start, end, timezone):
     csv_writer.writerows(result)
     return buf.getvalue()
 
+
 def getExportFileName(host, ds_graph, start, end, timezone):
     """
     Determination nom fichier pour export
@@ -501,6 +512,7 @@ class RRDNoDSError(RRDError):
     pass
 class RRDNotFoundError(RRDError):
     pass
+
 
 class RRD(object):
     """An RRD database"""
