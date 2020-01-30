@@ -19,7 +19,7 @@ cronext = os.getenv("CRONEXT", ".cron")
 
 setup(
     name='vigilo-vigirrd',
-    version='5.1.0',
+    version='5.1.1',
     author='Vigilo Team',
     author_email='contact.vigilo@c-s.fr',
     url='https://www.vigilo-nms.com/',
