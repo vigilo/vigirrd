@@ -55,8 +55,8 @@ class TestExportCSV(TestController):
             ),
         )
         rows = [row.strip().split(';') for row in resp.body.strip().split('\n')]
-        # On s'attend à avoir 12 lignes de données + l'en-tête.
-        self.assertEqual(len(rows), 13)
+        # On s'attend à avoir 14 lignes de données + l'en-tête.
+        self.assertEqual(len(rows), 15)
         # On doit avoir 3 colonnes : Timestamp + Date + PDS(sysUpTime).
         self.assertEqual(len(rows[0]), 3)
         # On vérifie les en-têtes, la 1ère date et la dernière date du fichier.
@@ -67,18 +67,15 @@ class TestExportCSV(TestController):
             '"sys%s"' % urllib2.unquote(self.datasource)
         )
         # L'export ne donne qu'1h de données par défaut.
-        # De plus, les données enregistrées ne commencent pas avant
-        # (start + 1) secondes.
-        self.assertEqual(rows[1][0],   '"%d"' % (start + 1))
-        # La dernière mesure a été prise 5 mins avant la fin de l'heure.
-        self.assertEqual(rows[-1][0],  '"%d"' % (start + 3600 - 300 + 1))
+        self.assertEqual(rows[1][0],   '"%d"' % 1232788084)
+        self.assertEqual(rows[-1][0],  '"%d"' % 1232791685)
         # Support des différentes versions de Babel
         try:
-            self.assertEqual(rows[1][1],   '"January 24, 2009 10:08:05 AM +0100"')
-            self.assertEqual(rows[-1][1],  '"January 24, 2009 11:03:05 AM +0100"')
+            self.assertEqual(rows[1][1],   '"January 24, 2009 10:08:04 AM +0100"')
+            self.assertEqual(rows[-1][1],  '"January 24, 2009 11:08:05 AM +0100"')
         except AssertionError:
-            self.assertEqual(rows[1][1],   '"January 24, 2009 at 10:08:05 AM +0100"')
-            self.assertEqual(rows[-1][1],  '"January 24, 2009 at 11:03:05 AM +0100"')
+            self.assertEqual(rows[1][1],   '"January 24, 2009 at 10:08:04 AM +0100"')
+            self.assertEqual(rows[-1][1],  '"January 24, 2009 at 11:08:05 AM +0100"')
 
     def test_export_using_default_values(self):
         """Export CSV sans 'start' ni 'end'"""
