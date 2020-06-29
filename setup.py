@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 # vim:set expandtab tabstop=4 shiftwidth=4:
-# Copyright (C) 2006-2020 CS-SI
+# Copyright (C) 2006-2020 CS GROUP – France
 # License: GNU GPL v2 <http://www.gnu.org/licenses/gpl-2.0.html>
 
 import os
@@ -21,7 +21,7 @@ setup(
     name='vigilo-vigirrd',
     version='5.2.0b1',
     author='Vigilo Team',
-    author_email='contact.vigilo@c-s.fr',
+    author_email='contact.vigilo@csgroup.eu',
     url='https://www.vigilo-nms.com/',
     license='http://www.gnu.org/licenses/gpl-2.0.html',
     description="Web interface to display RRD files in Vigilo",
