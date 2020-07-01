@@ -6,6 +6,7 @@
 
 import os
 import imp
+import sys
 import time
 import logging
 import logging.config
@@ -17,10 +18,10 @@ CACHE_KEEP_MINUTES = 5
 LOGGER = logging.getLogger(__name__)
 
 
-def load_conf():
+def load_conf(loglevel):
     conf_file = os.getenv("VIGILO_SETTINGS",
                           "/etc/vigilo/vigirrd/settings.ini")
-    logging.config.fileConfig(conf_file)
+    logging.basicConfig(level=loglevel)
     LOGGER.debug("Loading the configuration")
     # Chargement de la configuration de VigiRRD
     conf = appconfig("config:%s#main" % conf_file)
@@ -39,7 +40,8 @@ def cleanup_cache():
     Nettoyage du cache des images, à mettre dans cron.
     Cette fonction est exportée en exécutable par un point d'entrée.
     """
-    load_conf()
+    loglevel = logging.DEBUG if '-d' in sys.argv else logging.INFO
+    load_conf(loglevel)
     cache_dir = config["image_cache_dir"]
     if not os.path.exists(cache_dir):
         return
