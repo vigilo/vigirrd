@@ -4,18 +4,29 @@
 # License: GNU GPL v2 <http://www.gnu.org/licenses/gpl-2.0.html>
 
 import os
+from setuptools import setup, find_packages
 
+cmdclass = {}
 try:
-    from setuptools import setup, find_packages
+    from vigilo.common.commands import install_data
 except ImportError:
-    from ez_setup import use_setuptools
-    use_setuptools()
-    from setuptools import setup, find_packages
+    pass
+else:
+    cmdclass['install_data'] = install_data
 
-tests_require = ['WebTest', 'BeautifulSoup', 'gearbox']
+tests_require = [
+    'WebTest',
+    'gearbox',
+]
 
-sysconfdir = os.getenv("SYSCONFDIR", "/etc")
-cronext = os.getenv("CRONEXT", ".cron")
+os.environ.setdefault('HTTPD_USER', 'apache')
+os.environ.setdefault('SYSCONFDIR', '/etc')
+os.environ.setdefault('LOCALSTATEDIR', '/var')
+os.environ.setdefault('LOGROTATEDIR',
+    os.path.join(os.environ['SYSCONFDIR'], 'logrotate.d'))
+os.environ.setdefault('CRONDIR',
+    os.path.join(os.environ['SYSCONFDIR'], 'cron.d'))
+
 
 setup(
     name='vigilo-vigirrd',
@@ -33,7 +44,7 @@ setup(
         "pytz",
     ],
     zip_safe=False, # pour pouvoir déplacer app_cfg.py
-    packages=find_packages(exclude=['ez_setup']),
+    packages=find_packages(),
     include_package_data=True,
     test_suite='nose.collector',
     tests_require=tests_require,
@@ -58,15 +69,19 @@ setup(
     [console_scripts]
     vigirrd-cleanup-cache = vigirrd.commandline:cleanup_cache
     """,
+    cmdclass=cmdclass,
     data_files=[
-        (os.path.join(sysconfdir, 'vigilo', 'vigirrd'), [
-            os.path.join('deployment', 'vigirrd.conf'),
-            os.path.join('deployment', 'vigirrd.wsgi'),
-            os.path.join('deployment', 'settings.ini'),
-            os.path.join('conf', 'templates.py'),
+        ('@LOGROTATEDIR@', ['deployment/vigilo-vigirrd.in']),
+        ('@CRONDIR@', ['deployment/vigirrd.in']),
+        (os.path.join('@SYSCONFDIR@', 'vigilo', 'vigirrd'), [
+            'deployment/vigirrd.wsgi.in',
+            'deployment/vigirrd.conf.in',
+            'deployment/settings.ini.in',
+            'conf/templates.py',
+            'app_cfg.py',
         ]),
-        (os.path.join(sysconfdir, 'cron.d'), [
-            os.path.join('deployment', 'vigirrd%s' % cronext),
-        ]),
+        (os.path.join("@LOCALSTATEDIR@", "log", "vigilo", "vigirrd"), []),
+        (os.path.join("@LOCALSTATEDIR@", "cache", "vigilo", "sessions"), []),
+        (os.path.join("@LOCALSTATEDIR@", "cache", "vigilo", "vigirrd", "img"), []),
     ],
 )

@@ -1,18 +1,11 @@
-include buildout.cfg
-include Makefile
 include COPYING.txt
+include README.txt
 
-graft doc
-graft pkg
-graft debian
 recursive-include vigirrd/i18n *.pot *.po
 
 graft deployment
-graft ez_setup
-graft vigirrd/public
 graft vigirrd/templates
 graft vigirrd/tests/testdata
 graft conf
 include *.ini
-include jsl.cfg
 include app_cfg.py

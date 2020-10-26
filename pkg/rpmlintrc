@@ -1,5 +1,0 @@
-# -*- python -*-
-
-from Config import addFilter
-
-addFilter("W: unexpanded-macro /usr/lib/python2.\d/site-packages/vigirrd/tests/testdata")
