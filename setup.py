@@ -4,28 +4,31 @@
 # License: GNU GPL v2 <http://www.gnu.org/licenses/gpl-2.0.html>
 
 import os
+import pwd
 from setuptools import setup, find_packages
+
+setup_requires = ['vigilo-common'] if not os.environ.get('CI') else []
 
 cmdclass = {}
 try:
-    from vigilo.common.commands import install_data
+    from vigilo.common.commands import compile_catalog_plusjs
+    cmdclass['compile_catalog'] = compile_catalog_plusjs
 except ImportError:
     pass
-else:
-    cmdclass['install_data'] = install_data
+
+httpd_user = 'www-data'
+for user in ('www-data', 'apache'):
+    try:
+        pwd.getpwnam(user)
+        httpd_user = user
+        break
+    except KeyError:
+        pass
 
 tests_require = [
     'WebTest',
     'gearbox',
 ]
-
-os.environ.setdefault('HTTPD_USER', 'apache')
-os.environ.setdefault('SYSCONFDIR', '/etc')
-os.environ.setdefault('LOCALSTATEDIR', '/var')
-os.environ.setdefault('LOGROTATEDIR',
-    os.path.join(os.environ['SYSCONFDIR'], 'logrotate.d'))
-os.environ.setdefault('CRONDIR',
-    os.path.join(os.environ['SYSCONFDIR'], 'cron.d'))
 
 
 setup(
@@ -37,6 +40,7 @@ setup(
     license='http://www.gnu.org/licenses/gpl-2.0.html',
     description="Web interface to display RRD files in Vigilo",
     long_description="Web interface to display RRD files in Vigilo",
+    setup_requires=setup_requires,
     install_requires=[
         "vigilo-turbogears",
         "py-rrdtool",
@@ -70,18 +74,32 @@ setup(
     vigirrd-cleanup-cache = vigirrd.commandline:cleanup_cache
     """,
     cmdclass=cmdclass,
+    vigilo_build_vars={
+        'httpd-user': {
+            'default': httpd_user,
+            'description': "name of the user running the HTTP server",
+        },
+        'sysconfdir': {
+            'default': '/etc',
+            'description': "installation directory for configuration files",
+        },
+        'localstatedir': {
+            'default': '/var',
+            'description': "local state directory",
+        },
+    },
     data_files=[
-        ('@LOGROTATEDIR@', ['deployment/vigilo-vigirrd.in']),
-        ('@CRONDIR@', ['deployment/vigirrd.in']),
-        (os.path.join('@SYSCONFDIR@', 'vigilo', 'vigirrd'), [
+        (os.path.join('@sysconfdir@', 'logrotate.d'), ['deployment/vigilo-vigirrd.in']),
+        (os.path.join('@sysconfdir@', 'cron.d'), ['deployment/vigirrd.in']),
+        (os.path.join('@sysconfdir@', 'vigilo', 'vigirrd'), [
             'deployment/vigirrd.wsgi.in',
             'deployment/vigirrd.conf.in',
             'deployment/settings.ini.in',
             'conf/templates.py',
             'app_cfg.py',
         ]),
-        (os.path.join("@LOCALSTATEDIR@", "log", "vigilo", "vigirrd"), []),
-        (os.path.join("@LOCALSTATEDIR@", "cache", "vigilo", "sessions"), []),
-        (os.path.join("@LOCALSTATEDIR@", "cache", "vigilo", "vigirrd", "img"), []),
+        (os.path.join("@localstatedir@", "log", "vigilo", "vigirrd"), []),
+        (os.path.join("@localstatedir@", "cache", "vigilo", "sessions"), []),
+        (os.path.join("@localstatedir@", "cache", "vigilo", "vigirrd", "img"), []),
     ],
 )

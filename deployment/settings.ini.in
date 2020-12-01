@@ -155,7 +155,7 @@ csv_quoting = all
 ;
 
 ; Le nom du dossier dans lequel les fichiers de sessions sont conservés.
-cache_dir = @LOCALSTATEDIR@/cache/vigilo/sessions
+cache_dir = @localstatedir@/cache/vigilo/sessions
 
 ; Le nom du cookie de session qui sera créé sur le navigateur
 ; du client.
@@ -215,13 +215,13 @@ formatter = generic
 
 [handler_root_log]
 class = handlers.TimedRotatingFileHandler
-args = ('@LOCALSTATEDIR@/log/vigilo/vigirrd/root.log', 'D', 30, 12)
+args = ('@localstatedir@/log/vigilo/vigirrd/root.log', 'D', 30, 12)
 level = NOTSET
 formatter = generic
 
 [handler_vigirrd_log]
 class = handlers.TimedRotatingFileHandler
-args = ('@LOCALSTATEDIR@/log/vigilo/vigirrd/vigirrd.log', 'D', 30, 12)
+args = ('@localstatedir@/log/vigilo/vigirrd/vigirrd.log', 'D', 30, 12)
 level = NOTSET
 formatter = generic
 
