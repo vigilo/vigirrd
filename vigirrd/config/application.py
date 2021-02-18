@@ -7,18 +7,16 @@
 import imp
 import os.path
 from pkg_resources import resource_filename
-from paste.cascade import Cascade
-from paste.urlparser import StaticURLParser
+from tg.support.statics import StaticsMiddleware
 
 import tg
 
 __all__ = ['make_app']
 
 
-def make_app(global_conf, full_stack=True, **app_conf):
+def make_app(global_conf, **app_conf):
     """
-    Set vigirrd up with the settings found in the PasteDeploy configuration
-    file used.
+    Set vigirrd up with the settings found in the configuration file used.
 
     This is the PasteDeploy factory for the vigirrd application.
 
@@ -28,8 +26,6 @@ def make_app(global_conf, full_stack=True, **app_conf):
     @param global_conf: The global settings for vigirrd (those
         defined under the ``[DEFAULT]`` section).
     @type global_conf: dict
-    @param full_stack: Should the whole TG2 stack be set up?
-    @type full_stack: str or bool
     @return: The vigirrd application with all the relevant middleware
         loaded.
     """
@@ -39,18 +35,13 @@ def make_app(global_conf, full_stack=True, **app_conf):
     base_config = app_cfg.base_config
 
     # Initialisation de l'application et de son environnement d'exécution.
-    load_environment = base_config.make_load_environment()
-    make_base_app = base_config.setup_tg_wsgi_app(load_environment)
-    app = make_base_app(global_conf, full_stack=True, **app_conf)
+    app = base_config.make_wsgi_app(global_conf, app_conf, wrap_app=None)
 
     max_age = app_conf.get("cache_max_age")
     try:
         max_age = int(max_age)
     except (ValueError, TypeError):
-        max_age = None
+        max_age = 0
 
-    image_cache = StaticURLParser(tg.config["image_cache_dir"],
-                                  cache_max_age=max_age)
-
-    app = Cascade([image_cache, app])
+    app = StaticsMiddleware(app, app_conf["image_cache_dir"], max_age)
     return app

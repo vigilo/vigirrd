@@ -8,11 +8,10 @@
 ; and generally should not be modified by end users.
 
 [DEFAULT]
+; WARNING: *THE LINE BELOW MUST BE SET TO "false" ON A PRODUCTION ENVIRONMENT*
+; Debug mode will enable the interactive debugging tool, allowing ANYONE to
+; execute malicious code after an exception is raised.
 debug = false
-; Uncomment and replace with the address which should receive any error reports
-;email_to = you@yourdomain.com
-smtp_server = localhost
-error_email_from = paste@localhost
 
 [server:main]
 use = egg:Paste#http
@@ -23,11 +22,15 @@ port = 80
 use = egg:vigilo-vigirrd
 
 ;
-; Configuration de VigiRRD
+; Configuration des éléments secrets
 ;
 
+; Clé secrète utilisée pour signer les cookies.
+; Vous DEVEZ changer cette valeur avant la mise en production.
+secret = vigilo
+
 ;
-; 1 - Configuration de la base de données.
+; Configuration de l'accès à la base de données.
 ;
 
 ; URL d'accès à la base de données (le "%(here)s" est normal).
@@ -40,29 +43,11 @@ sqlalchemy.echo_pool = false
 sqlalchemy.pool_recycle = 3600
 
 ;
-; 2 - Configuration des éléments de sécurité.
+; Configuration de l'interface.
 ;
 
-; La clé secrète utilisée pour chiffrer/déchiffrer la session.
-; Vous DEVEZ changer cette valeur avant la mise en production.
-; Vous pouvez utilisez la même valeur que pour la clé
-; "sa_auth.cookie_secret".
-beaker.session.secret = vigilo
-
-; La clé secrète utilisée pour chiffrer/déchiffrer le cookie
-; d'authentification.
-; Vous DEVEZ changer cette valeur avant la mise en production.
-; Vous pouvez utilisez la même valeur que pour la clé
-; "beaker.session.secret".
-sa_auth.cookie_secret = vigilo
-
-;
-; 3 - Configuration de l'interface.
-;
-
-; La langue par défaut de l'interface.
-; VigiRRD n'est pas traduit (interface de débogage).
-;lang = fr
+; Emplacement du cache des sessions.
+cache_dir = @localstatedir@/cache/vigilo/sessions
 
 ; Emplacement du cache d'images.
 image_cache_dir = /var/cache/vigilo/vigirrd/img
@@ -146,43 +131,9 @@ csv_respect_locale = True
 csv_quoting = all
 
 ;
-; 4 - Configuration des proxies Nagios & RRDgraph.
-;
-; VigiRRD n'utilise aucun proxy.
-
-;
-; 5 - Configuration avancée des sessions.
-;
-
-; Le nom du dossier dans lequel les fichiers de sessions sont conservés.
-cache_dir = @localstatedir@/cache/vigilo/sessions
-
-; Le nom du cookie de session qui sera créé sur le navigateur
-; du client.
-beaker.session.key = vigilo
-
-; If you'd like to fine-tune the individual locations of the cache data dirs
-; for the Cache data, or the Session saves, un-comment the desired settings
-; here:
-;beaker.cache.data_dir = %(here)s/data/cache
-;beaker.session.data_dir = %(here)s/data/sessions
-
-;
-; 6 - Autres options.
-; Pensez à configurer le logging dans les sections
-; "loggers", "handlers" & "formatters" ci-dessous.
-;
-
-; Doit être laissé à true pour obtenir une application fonctionnelle.
-full_stack = true
-
-; Doit valoir false en production (risque de sécurité sinon).
-; WARNING: *THE LINE BELOW MUST BE UNCOMMENTED ON A PRODUCTION ENVIRONMENT*
-; Debug mode will enable the interactive debugging tool, allowing ANYONE to
-; execute malicious code after an exception is raised.
-set debug = false
-
 ; Logging configuration
+;
+
 ; Add additional loggers, handlers, formatters here
 ; Uses python's logging config file format
 ; http://docs.python.org/lib/logging-config-fileformat.html

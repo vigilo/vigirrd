@@ -33,3 +33,13 @@ class TestGraph(TestController):
             ),
         )
         self.assertTrue('lastvalue' in response.json)
+
+    def test_graph(self):
+        '''Génération d'un graphe à partir des données de métrologie.'''
+        res = self.app.get('/graph.png', {
+                'host': 'testserver',
+                'graphtemplate': 'UpTime',
+                'start': '1232694600',
+                'duration': 3500,
+            })
+        self.assertEqual('image/png', res.content_type)

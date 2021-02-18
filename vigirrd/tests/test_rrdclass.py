@@ -5,69 +5,19 @@
 # License: GNU GPL v2 <http://www.gnu.org/licenses/gpl-2.0.html>
 
 from __future__ import print_function
+
 import os
 import time
-import tempfile
-import shutil
-from unittest import TestCase
-from types import ModuleType
-from datetime import datetime
-
 import networkx as nx
-from tg.util import ContextObj
-from tg import request_local, config
-from tg.support.registry import StackedObjectProxy, RegistryManager
-from tg.wsgiapp import RequestLocals
-from tg.i18n import _get_translator
+
+from tg import config
+from unittest import TestCase
 from webtest import TestApp
-import pytz
-import babel.dates
 
 from vigilo.common import get_rrd_path
 from vigirrd import model
 from vigirrd.lib import rrd, conffile
 from vigirrd.tests import TestController
-
-
-class CallWrapperApp(object):
-    def __init__(self, obj, func, *args, **kw):
-        self.obj = obj
-        self.func = func
-        self.args = args
-        self.kw = kw
-        self.content_type = 'text/plain'
-        self.status = '200 OK'
-
-    def __call__(self, environ, start_response):
-        if 'paste.registry' in environ:
-            conf = config._current_obj()
-            req = request_local.Request(environ)
-            req._fast_setattr('_language', conf['lang'])
-            req._fast_setattr('_response_type', None)
-
-            ctx = RequestLocals()
-            ctx.response = request_local.Response()
-            ctx.request = req
-            ctx.translator = _get_translator(conf['lang'], tg_config=conf)
-            ctx.config = conf
-
-            registry = environ['paste.registry']
-            registry.register(request_local.config, conf)
-            registry.register(request_local.context, ctx)
-
-        response_headers = [('Content-type', self.content_type)]
-        start_response(self.status, response_headers)
-
-        # Rebinding de la méthode sur son objet si nécessaire.
-        if isinstance(self.obj, ModuleType):
-            desc = self.func
-        else:
-            desc = self.func.__get__(self.obj, type(self.obj))
-
-        res = desc(*self.args, **self.kw)
-        if not isinstance(res, str):
-            res = unicode(res).encode('utf-8')
-        return [res]
 
 
 class TestRRDclass(TestController):
@@ -108,37 +58,6 @@ class TestRRDclass(TestController):
             result = self.rrd.getStartTime()
 
         self.assertEqual(result, value, "getStartTime() does not work")
-
-    def test_graph(self):
-        '''Génération d'un graphe à partir des données de métrologie.'''
-        tmpdir = tempfile.mkdtemp()
-        tmpfile = os.path.join(tmpdir, "graph.svg")
-
-        start = 1232694600
-        duration = 3500
-
-        try:
-            # La bibliothèque de manipulation des fichiers RRD
-            # doit avoir été chargée correctement.
-            self.assertTrue(self.rrd is not None)
-
-            ds = model.PerfDataSource.by_name("sysUpTime")
-            wsgiapp = CallWrapperApp(self.rrd, self.rrd.graph,
-                                     conffile.templates["lines"], [ds, ],
-                                     format="SVG", outfile=tmpfile,
-                                     start=start, duration=duration)
-            wsgiapp = RegistryManager(wsgiapp)
-            app = TestApp(wsgiapp)
-            app.get('/')
-
-            # L'ancien test vérifiait le contenu du graphe généré,
-            # néanmoins le résultat varie beaucoup en fonction de
-            # la version de rrdtool utilisée et d'autres bibliothèques
-            # du système. On se contente donc de vérifier l'existence
-            # du graphe.
-            self.assertTrue(os.path.exists(tmpfile))
-        finally:
-            shutil.rmtree(tmpdir)
 
     def test_getLastValue(self):
         '''Récupération de la dernière valeur de métrologie dans un RRD.'''

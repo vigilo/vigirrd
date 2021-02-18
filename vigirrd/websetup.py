@@ -22,12 +22,12 @@ def setup_app(command, conf, variables):
     app_cfg = imp.load_module('vigirrd.config.app_cfg', *mod_info)
 
     # Initialisation de l'environnement d'exécution.
-    load_environment = app_cfg.base_config.make_load_environment()
-    load_environment(conf.global_conf, conf.local_conf)
+    base_config = app_cfg.base_config
+    base_config.make_wsgi_app(conf.global_conf, conf.local_conf, wrap_app=None)
 
     # Load the models
     from vigirrd import model
     print("Creating tables")
-    model.metadata.create_all(bind=config['pylons.app_globals'].sa_engine)
+    model.metadata.create_all(bind=config['tg.app_globals'].sa_engine)
     transaction.commit()
     print("Successfully setup")

@@ -68,7 +68,7 @@ setup(
 
     entry_points="""
     [paste.app_factory]
-    main = vigirrd.config.middleware:make_app
+    main = vigirrd.config.application:make_app
 
     [console_scripts]
     vigirrd-cleanup-cache = vigirrd.commandline:cleanup_cache

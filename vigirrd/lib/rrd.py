@@ -30,7 +30,7 @@ LOGGER = getLogger(__name__)
 from vigilo.common.nx import networkx as nx
 from tg import config, request
 from tg.i18n import ugettext as _
-from paste.deploy.converters import asbool
+from tg.support.converters import asbool
 
 from vigilo.common import get_rrd_path
 

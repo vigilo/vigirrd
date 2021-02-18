@@ -18,6 +18,7 @@ class TestHTMLPages(TestController):
         """Page d'accueil sans arguments"""
         response = self.app.get('/index', status=302)
         response = response.follow()
+        print(response.unicode_body.encode('ascii', 'replace'))
         self.assertTrue(
             u'<a href="/graphs.html?host=testserver">testserver</a>' in
             response.unicode_body
@@ -32,6 +33,7 @@ class TestHTMLPages(TestController):
         """Page d'accueil avec juste un hôte"""
         response = self.app.get('/index?host=testserver', status=302)
         response = response.follow()
+        print(response.unicode_body.encode('ascii', 'replace'))
         self.assertTrue(
             '<input type="radio" name="graphtemplate" value="UpTime" />' in
             response.unicode_body
@@ -43,6 +45,7 @@ class TestHTMLPages(TestController):
             urllib2.quote(u'testserver éçà'.encode('utf-8')),
             status=302)
         response = response.follow()
+        print(response.unicode_body.encode('ascii', 'replace'))
         self.assertTrue(
             u'<input type="radio" name="graphtemplate" value="UpTime éçà" />' in
             response.unicode_body
@@ -51,6 +54,7 @@ class TestHTMLPages(TestController):
     def test_servers(self):
         """Liste des hôtes supervisés"""
         response = self.app.get('/servers')
+        print(response.unicode_body.encode('ascii', 'replace'))
         self.assertTrue(
             '<a href="/graphs.html?host=testserver">testserver</a>' in
             response.unicode_body
@@ -65,6 +69,7 @@ class TestHTMLPages(TestController):
     def test_graphs_html(self):
         """Liste des graphes d'un hôte au format HTML"""
         response = self.app.get('/graphs?host=testserver')
+        print(response.unicode_body.encode('ascii', 'replace'))
         self.assertTrue(
             '<input type="radio" name="graphtemplate" value="UpTime" />' in
             response.body
@@ -74,6 +79,7 @@ class TestHTMLPages(TestController):
         """Liste des graphes d'un hôte au format HTML (unicode)"""
         response = self.app.get('/graphs?host=%s' %
             urllib2.quote(u'testserver éçà'.encode('utf-8')))
+        print(response.unicode_body.encode('ascii', 'replace'))
         self.assertTrue(
             u'<input type="radio" name="graphtemplate" value="UpTime éçà" />' in
             response.unicode_body

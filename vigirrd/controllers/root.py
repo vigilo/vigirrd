@@ -8,7 +8,7 @@
 import os
 import time
 import re
-from StringIO import StringIO
+from io import BytesIO
 from logging import getLogger
 LOGGER = getLogger(__name__)
 
@@ -176,10 +176,9 @@ class RootController(BaseController):
             response.headers['Pragma'] = 'no-cache'
             response.headers['Cache-Control'] = 'no-cache'
             response.headers['Expires'] = '-1'
-            result = StringIO()
-            image = open(image_file, "rb")
-            result.write(image.read())
-            image.close()
+            result = BytesIO()
+            with open(image_file, "rb") as image:
+                result.write(image.read())
             return result.getvalue()
         else:
             imgurl = "/%s" % os.path.basename(image_file)
